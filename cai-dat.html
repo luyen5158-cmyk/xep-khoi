@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cài đặt Xếp Khối</title>
+<meta name="description" content="Cách cài Xếp Khối lên điện thoại hoặc máy tính. Không cần chợ ứng dụng, không cần tài khoản.">
+<meta name="theme-color" content="#0b1020">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#0B1020; --surface:#151B2C; --line:#262E46; --line2:#333D59;
+  --ink:#ECEFF8; --ink2:#A6AEC6; --ink3:#6E7793; --accent:#FFC65C;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; background:var(--paper); color:var(--ink);
+  font-family:"Be Vietnam Pro",system-ui,sans-serif; line-height:1.6;
+  display:flex; justify-content:center; padding:32px 20px 72px;
+}
+.wrap{width:100%; max-width:620px}
+.eyebrow{
+  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0;
+}
+h1{
+  font-family:"Archivo",system-ui,sans-serif; font-variation-settings:"wdth" 118,"wght" 800;
+  font-size:clamp(30px,7vw,46px); line-height:1.04; letter-spacing:-.02em; margin:14px 0 0;
+}
+.lede{color:var(--ink2); font-size:17px; margin:16px 0 0}
+.zh{color:var(--ink3); font-size:13.5px; margin:6px 0 0}
+.meta{
+  display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink3);
+}
+.meta span{border:1px solid var(--line); border-radius:100px; padding:3px 11px}
+
+/* Ô địa chỉ + mã QR: thứ duy nhất cần gửi cho người khác */
+.share{
+  display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:20px; margin-top:30px;
+}
+.share .qr{width:132px; height:132px; flex:none; background:#fff; border-radius:8px; padding:6px}
+.share .qr svg{display:block; width:100%; height:100%; color:#0B1020}
+.share .txt{flex:1 1 240px; min-width:0}
+.share .txt b{display:block; font-size:14px; font-weight:600}
+.share .url{
+  font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--accent);
+  word-break:break-all; margin-top:6px; display:block; text-decoration:none;
+}
+.share .txt i{font-style:normal; display:block; color:var(--ink3); font-size:12.5px; margin-top:10px}
+
+h2{
+  font-family:"Archivo",system-ui,sans-serif; font-variation-settings:"wdth" 112,"wght" 700;
+  font-size:21px; letter-spacing:-.01em; margin:44px 0 0; padding-top:22px;
+  border-top:1px solid var(--line);
+}
+h2 .os{font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink3); font-weight:400; letter-spacing:.08em}
+h3{font-size:15.5px; font-weight:600; margin:26px 0 0}
+ol{margin:14px 0 0; padding-left:22px}
+ol li{margin-top:9px; color:var(--ink2); font-size:15px}
+ol li b{color:var(--ink); font-weight:600}
+p{color:var(--ink2); font-size:15px}
+kbd{
+  font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--ink);
+  background:var(--surface); border:1px solid var(--line2); border-radius:5px; padding:1px 6px;
+}
+.note{
+  background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:0 10px 10px 0; padding:14px 16px; margin-top:22px;
+}
+.note p{margin:0; font-size:14.5px}
+.note p + p{margin-top:8px}
+dl{margin:16px 0 0}
+dt{font-weight:600; font-size:15px; margin-top:16px}
+dd{margin:4px 0 0; color:var(--ink2); font-size:14.5px}
+footer{
+  margin-top:48px; padding-top:20px; border-top:1px solid var(--line);
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink3);
+}
+footer a{color:var(--accent); text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Hướng dẫn cài đặt</p>
+  <h1>Cài Xếp Khối lên máy</h1>
+  <p class="lede">Không có trên App Store hay CH Play, và không cần. Mở địa chỉ bên dưới bằng trình duyệt rồi bấm “thêm vào màn hình chính” — game nằm cạnh các ứng dụng khác, có biểu tượng riêng, mở lên là chơi ngay cả khi mất mạng.</p>
+  <p class="zh">遊戲不在 App Store 或 Google Play，也不需要。用瀏覽器打開下面的網址，選「加到主畫面」就好。</p>
+  <div class="meta">
+    <span>Miễn phí</span><span>Không cần tài khoản</span><span>Khoảng 1 MB</span><span>Chơi được khi mất mạng</span>
+  </div>
+
+  <div class="share">
+    <div class="qr" aria-hidden="true">
+      <svg viewBox="0 0 39 39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M3 3h7v1h-7zM12 3h1v1h-1zM17 3h1v1h-1zM19 3h1v1h-1zM21 3h1v1h-1zM27 3h1v1h-1zM29 3h7v1h-7zM3 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM14 4h4v1h-4zM20 4h1v1h-1zM23 4h1v1h-1zM25 4h1v1h-1zM27 4h1v1h-1zM29 4h1v1h-1zM35 4h1v1h-1zM3 5h1v1h-1zM5 5h3v1h-3zM9 5h1v1h-1zM11 5h2v1h-2zM14 5h3v1h-3zM20 5h2v1h-2zM24 5h3v1h-3zM29 5h1v1h-1zM31 5h3v1h-3zM35 5h1v1h-1zM3 6h1v1h-1zM5 6h3v1h-3zM9 6h1v1h-1zM11 6h2v1h-2zM14 6h1v1h-1zM22 6h1v1h-1zM24 6h1v1h-1zM26 6h2v1h-2zM29 6h1v1h-1zM31 6h3v1h-3zM35 6h1v1h-1zM3 7h1v1h-1zM5 7h3v1h-3zM9 7h1v1h-1zM14 7h3v1h-3zM18 7h1v1h-1zM20 7h2v1h-2zM24 7h1v1h-1zM26 7h1v1h-1zM29 7h1v1h-1zM31 7h3v1h-3zM35 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM13 8h5v1h-5zM19 8h3v1h-3zM23 8h1v1h-1zM25 8h1v1h-1zM29 8h1v1h-1zM35 8h1v1h-1zM3 9h7v1h-7zM11 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM23 9h1v1h-1zM25 9h1v1h-1zM27 9h1v1h-1zM29 9h7v1h-7zM11 10h4v1h-4zM25 10h1v1h-1zM27 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1zM11 11h2v1h-2zM15 11h4v1h-4zM20 11h2v1h-2zM23 11h1v1h-1zM27 11h3v1h-3zM32 11h3v1h-3zM5 12h1v1h-1zM10 12h4v1h-4zM15 12h1v1h-1zM17 12h2v1h-2zM21 12h2v1h-2zM26 12h1v1h-1zM31 12h4v1h-4zM3 13h1v1h-1zM5 13h6v1h-6zM12 13h4v1h-4zM18 13h2v1h-2zM21 13h1v1h-1zM23 13h3v1h-3zM29 13h1v1h-1zM31 13h1v1h-1zM33 13h2v1h-2zM4 14h1v1h-1zM7 14h2v1h-2zM10 14h1v1h-1zM17 14h1v1h-1zM19 14h1v1h-1zM23 14h1v1h-1zM25 14h1v1h-1zM30 14h6v1h-6zM6 15h1v1h-1zM8 15h3v1h-3zM15 15h7v1h-7zM23 15h1v1h-1zM25 15h3v1h-3zM29 15h2v1h-2zM6 16h2v1h-2zM11 16h2v1h-2zM17 16h1v1h-1zM19 16h2v1h-2zM23 16h1v1h-1zM26 16h1v1h-1zM29 16h2v1h-2zM34 16h2v1h-2zM4 17h2v1h-2zM8 17h2v1h-2zM11 17h1v1h-1zM13 17h3v1h-3zM17 17h1v1h-1zM20 17h1v1h-1zM22 17h1v1h-1zM24 17h1v1h-1zM28 17h2v1h-2zM31 17h1v1h-1zM33 17h2v1h-2zM5 18h1v1h-1zM7 18h2v1h-2zM12 18h1v1h-1zM15 18h2v1h-2zM18 18h1v1h-1zM21 18h2v1h-2zM26 18h1v1h-1zM28 18h1v1h-1zM32 18h2v1h-2zM35 18h1v1h-1zM5 19h1v1h-1zM7 19h1v1h-1zM9 19h1v1h-1zM11 19h1v1h-1zM13 19h2v1h-2zM19 19h2v1h-2zM22 19h1v1h-1zM27 19h2v1h-2zM30 19h2v1h-2zM35 19h1v1h-1zM5 20h3v1h-3zM11 20h1v1h-1zM13 20h1v1h-1zM15 20h2v1h-2zM18 20h9v1h-9zM29 20h1v1h-1zM32 20h2v1h-2zM35 20h1v1h-1zM3 21h1v1h-1zM6 21h1v1h-1zM9 21h1v1h-1zM14 21h1v1h-1zM16 21h4v1h-4zM22 21h1v1h-1zM26 21h1v1h-1zM30 21h1v1h-1zM32 21h4v1h-4zM3 22h2v1h-2zM6 22h1v1h-1zM8 22h1v1h-1zM10 22h1v1h-1zM13 22h1v1h-1zM20 22h3v1h-3zM25 22h1v1h-1zM27 22h3v1h-3zM31 22h5v1h-5zM6 23h2v1h-2zM9 23h1v1h-1zM11 23h1v1h-1zM15 23h3v1h-3zM19 23h1v1h-1zM23 23h2v1h-2zM26 23h3v1h-3zM30 23h3v1h-3zM34 23h2v1h-2zM3 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM12 24h3v1h-3zM16 24h2v1h-2zM19 24h1v1h-1zM21 24h1v1h-1zM23 24h1v1h-1zM25 24h2v1h-2zM30 24h4v1h-4zM3 25h1v1h-1zM7 25h1v1h-1zM9 25h3v1h-3zM14 25h3v1h-3zM18 25h3v1h-3zM23 25h3v1h-3zM28 25h2v1h-2zM32 25h3v1h-3zM3 26h1v1h-1zM5 26h1v1h-1zM7 26h1v1h-1zM10 26h2v1h-2zM14 26h2v1h-2zM17 26h1v1h-1zM25 26h2v1h-2zM30 26h6v1h-6zM3 27h3v1h-3zM8 27h6v1h-6zM15 27h2v1h-2zM18 27h2v1h-2zM22 27h2v1h-2zM25 27h1v1h-1zM27 27h5v1h-5zM11 28h1v1h-1zM13 28h3v1h-3zM18 28h2v1h-2zM21 28h3v1h-3zM25 28h3v1h-3zM31 28h1v1h-1zM33 28h1v1h-1zM35 28h1v1h-1zM3 29h7v1h-7zM12 29h1v1h-1zM16 29h3v1h-3zM21 29h1v1h-1zM23 29h2v1h-2zM26 29h2v1h-2zM29 29h1v1h-1zM31 29h1v1h-1zM33 29h2v1h-2zM3 30h1v1h-1zM9 30h1v1h-1zM13 30h2v1h-2zM16 30h2v1h-2zM25 30h3v1h-3zM31 30h5v1h-5zM3 31h1v1h-1zM5 31h3v1h-3zM9 31h1v1h-1zM12 31h1v1h-1zM14 31h1v1h-1zM17 31h2v1h-2zM21 31h2v1h-2zM24 31h1v1h-1zM27 31h6v1h-6zM35 31h1v1h-1zM3 32h1v1h-1zM5 32h3v1h-3zM9 32h1v1h-1zM13 32h3v1h-3zM17 32h1v1h-1zM19 32h2v1h-2zM23 32h2v1h-2zM26 32h3v1h-3zM30 32h2v1h-2zM33 32h1v1h-1zM35 32h1v1h-1zM3 33h1v1h-1zM5 33h3v1h-3zM9 33h1v1h-1zM15 33h2v1h-2zM19 33h3v1h-3zM23 33h3v1h-3zM27 33h1v1h-1zM30 33h6v1h-6zM3 34h1v1h-1zM9 34h1v1h-1zM13 34h1v1h-1zM15 34h5v1h-5zM22 34h2v1h-2zM29 34h3v1h-3zM33 34h1v1h-1zM3 35h7v1h-7zM11 35h2v1h-2zM19 35h2v1h-2zM22 35h1v1h-1zM27 35h2v1h-2zM30 35h1v1h-1zM34 35h1v1h-1z"/></svg>
+    </div>
+    <div class="txt">
+      <b>Quét mã hoặc mở địa chỉ này</b>
+      <a class="url" href="https://luyen5158-cmyk.github.io/xep-khoi/game/">luyen5158-cmyk.github.io/xep-khoi/game/</a>
+      <i>Gửi cho bạn bè chỉ cần gửi đúng dòng này. Mở ra là chơi được luôn — cài đặt chỉ để lần sau khỏi phải tìm lại.</i>
+    </div>
+  </div>
+
+  <h2>iPhone và iPad <span class="os">SAFARI</span></h2>
+  <p>Trên iPhone, chỉ Safari cài được. Nếu bạn đang mở bằng Chrome, Facebook hay Zalo, hãy chọn <b>Mở trong Safari</b> trước.</p>
+  <ol>
+    <li>Mở địa chỉ ở trên bằng <b>Safari</b>.</li>
+    <li>Bấm nút <b>Chia sẻ</b> — hình vuông có mũi tên đi lên, nằm ở thanh dưới màn hình.</li>
+    <li>Vuốt danh sách xuống, chọn <b>Thêm vào MH chính</b> <span class="os">(Add to Home Screen)</span>.</li>
+    <li>Bấm <b>Thêm</b> ở góc trên bên phải. Biểu tượng hiện ra trên màn hình chính.</li>
+  </ol>
+
+  <h2>Điện thoại Android <span class="os">CHROME</span></h2>
+  <ol>
+    <li>Mở địa chỉ ở trên bằng <b>Chrome</b>.</li>
+    <li>Chờ vài giây. Thường Chrome tự hiện dải <b>“Cài đặt ứng dụng”</b> ở dưới — bấm vào là xong.</li>
+    <li>Không thấy dải đó thì bấm dấu <b>⋮</b> góc trên bên phải, chọn <b>Cài đặt ứng dụng</b> hoặc <b>Thêm vào Màn hình chính</b>.</li>
+    <li>Bấm <b>Cài đặt</b> để xác nhận.</li>
+  </ol>
+
+  <h2>Máy tính Windows <span class="os">CHROME · EDGE</span></h2>
+  <ol>
+    <li>Mở địa chỉ ở trên bằng <b>Chrome</b> hoặc <b>Edge</b>.</li>
+    <li>Nhìn vào <b>cuối thanh địa chỉ</b> — có một biểu tượng cài đặt (màn hình nhỏ có mũi tên xuống). Bấm vào đó.</li>
+    <li>Không thấy thì vào menu: Chrome <b>⋮ → Truyền, lưu và chia sẻ → Cài đặt trang này dưới dạng ứng dụng</b>; Edge <b>⋯ → Ứng dụng → Cài đặt trang web này dưới dạng ứng dụng</b>.</li>
+    <li>Bấm <b>Cài đặt</b>. Game mở trong cửa sổ riêng, không còn thanh địa chỉ, và có mặt trong menu Start.</li>
+  </ol>
+
+  <h2>Máy Mac <span class="os">SAFARI · CHROME</span></h2>
+  <ol>
+    <li><b>Safari</b> (macOS Sonoma trở lên): mở địa chỉ, rồi chọn menu <b>File → Add to Dock</b>.</li>
+    <li><b>Chrome</b>: bấm biểu tượng cài đặt ở cuối thanh địa chỉ, hoặc <b>⋮ → Truyền, lưu và chia sẻ → Cài đặt trang này dưới dạng ứng dụng</b>.</li>
+    <li>Biểu tượng nằm trong Launchpad và Dock như mọi ứng dụng khác.</li>
+  </ol>
+
+  <h2>Khi không thấy nút cài đặt</h2>
+  <dl>
+    <dt>Đang dùng Firefox</dt>
+    <dd>Firefox trên máy tính không cài được kiểu này. Cứ chơi thẳng trong trình duyệt, hoặc lưu vào dấu trang. Firefox trên Android thì dùng <b>⋮ → Cài đặt</b>.</dd>
+
+    <dt>Đang mở từ trong Zalo, Messenger hay Facebook</dt>
+    <dd>Các ứng dụng đó có trình duyệt riêng, không cài được. Bấm menu <b>⋯</b> của chúng rồi chọn <b>Mở bằng trình duyệt</b> / <b>Mở trong Safari</b>.</dd>
+
+    <dt>Đã cài rồi</dt>
+    <dd>Trình duyệt giấu nút đi khi máy đã có sẵn. Tìm biểu tượng Xếp Khối trên màn hình chính hoặc trong Launchpad.</dd>
+
+    <dt>Vẫn không được</dt>
+    <dd>Không sao cả. Địa chỉ đó mở bằng bất cứ trình duyệt nào cũng chơi được đầy đủ — cài đặt chỉ tiện hơn thôi.</dd>
+  </dl>
+
+  <h2>Vài điều nên biết trước</h2>
+  <div class="note">
+    <p><b>Chơi khi mất mạng:</b> chơi trọn vẹn một ván lần đầu có mạng, sau đó máy bay hay hết 4G vẫn chơi bình thường. Riêng bảng xếp hạng thì cần mạng.</p>
+    <p><b>Điểm lưu ở đâu:</b> kỷ lục cá nhân nằm trong máy bạn. Xoá ứng dụng hoặc xoá dữ liệu trình duyệt là mất. Muốn tên mình lên bảng xếp hạng chung thì đăng nhập bằng Google trong game.</p>
+    <p><b>Cập nhật:</b> tự động. Mỗi lần mở lúc có mạng là đã lấy bản mới nhất, không phải cài lại bao giờ.</p>
+    <p><b>Gỡ ra:</b> giữ ngón tay lên biểu tượng rồi chọn xoá, y như ứng dụng thường. Trên máy tính: mở game, bấm <b>⋮ → Gỡ cài đặt</b>.</p>
+  </div>
+  <p class="zh">離線可玩（第一次要連網）· 個人紀錄存在裝置裡 · 有網路開啟就會自動更新 · 移除方式跟一般 App 一樣</p>
+
+  <footer>← <a href="./">Về trang chính</a> · <a href="https://luyen5158-cmyk.github.io/xep-khoi/game/">Chơi ngay</a> · Mã nguồn tại <a href="https://github.com/luyen5158-cmyk/xep-khoi">github.com/luyen5158-cmyk/xep-khoi</a></footer>
+
+</div>
+</body>
+</html>
