@@ -6,7 +6,7 @@
  *
  * Đổi số trong CACHE mỗi lần phát hành để dọn sạch bản cũ.
  */
-const CACHE = "xep-khoi-v2";
+const CACHE = "xep-khoi-v3";
 
 const ASSETS = [
   ".", "index.html", "css/style.css", "manifest.webmanifest",
