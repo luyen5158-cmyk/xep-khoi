@@ -209,3 +209,7 @@
 - [x] 把伺服器那份引擎搬到 Node 裡跑同一份 replay，分數完全一致（2461 = 2461），
       `valid` 和 `ended` 都成立
 - [x] 確認暱稱裡的 HTML 只會顯示成文字，不會變成網頁元素
+- [x] **正式網址上線並驗證**（2026-09-03，commit `df132bd`）
+      公開網站讀得到真的排行榜（`1 meme 2714`），Service Worker 確認已註冊 ——
+      也就是 sw.js 那個「只處理同源請求」的修正在正式環境是好的。
+      *Trang công khai đọc được bảng xếp hạng thật, service worker đã đăng ký.*
