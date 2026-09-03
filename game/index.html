@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Xếp Khối</title>
+<meta name="description" content="Lưới 8×8, ba khối mỗi lượt, không xoay khối, không đồng hồ. Lấp đầy hàng ngang hoặc cột dọc để xoá.">
+<meta name="theme-color" content="#0b1020">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <div id="hud">
+    <div class="stat"><div class="label">Điểm</div><div class="value" id="score">0</div></div>
+    <div class="stat"><div class="label">Level</div><div class="value" id="level">1</div></div>
+    <div class="stat"><div class="label">Kỷ lục</div><div class="value" id="best">0</div></div>
+    <button id="mute" type="button" aria-label="Tắt âm thanh">🔊</button>
+  </div>
+
+  <div id="board"></div>
+
+  <div id="tray">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+
+  <div id="hint">Kéo khối vào lưới · lấp đầy hàng ngang hoặc cột dọc để xoá</div>
+</div>
+
+<div id="combo"></div>
+<canvas id="fx"></canvas>
+
+<div id="over">
+  <h1>Hết nước đi!</h1>
+  <p>Điểm của bạn: <b id="finalScore">0</b></p>
+  <button id="again" type="button">Chơi lại</button>
+</div>
+
+<script type="module" src="js/game.js"></script>
+<script>
+  // Service worker: chơi được cả khi mất mạng, và thêm được vào màn hình chính.
+  if ("serviceWorker" in navigator) {
+    addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+</script>
+</body>
+</html>

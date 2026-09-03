@@ -1,0 +1,17 @@
+{
+  "name": "Xếp Khối",
+  "short_name": "Xếp Khối",
+  "description": "Lưới 8×8, ba khối mỗi lượt, không xoay khối, không đồng hồ.",
+  "lang": "vi",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    { "src": "icon/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
