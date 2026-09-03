@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xếp Khối</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#0B1020; --surface:#151B2C; --line:#262E46; --line2:#333D59;
+  --ink:#ECEFF8; --ink2:#A6AEC6; --ink3:#6E7793; --accent:#FFC65C;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; background:var(--paper); color:var(--ink);
+  font-family:"Be Vietnam Pro",system-ui,sans-serif; line-height:1.6;
+  display:flex; align-items:center; justify-content:center; padding:32px 20px;
+}
+.wrap{width:100%; max-width:560px}
+.eyebrow{
+  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+}
+h1{
+  font-family:"Archivo",system-ui,sans-serif; font-variation-settings:"wdth" 118,"wght" 800;
+  font-size:clamp(34px,8vw,54px); line-height:1.02; letter-spacing:-.02em; margin:14px 0 0;
+}
+.lede{color:var(--ink2); font-size:17px; margin:16px 0 0}
+.meta{
+  display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink3);
+}
+.meta span{border:1px solid var(--line); border-radius:100px; padding:3px 11px}
+.links{display:flex; flex-direction:column; gap:10px; margin-top:34px}
+a.card{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  padding:16px 18px; text-decoration:none; color:inherit; transition:border-color .15s, transform .15s;
+}
+a.card:hover{border-color:var(--line2); transform:translateY(-1px)}
+a.card b{font-weight:600; font-size:15.5px; display:block}
+a.card i{
+  font-style:normal; color:var(--ink3); font-size:13px; display:block; margin-top:2px;
+}
+a.card .go{font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--accent); white-space:nowrap}
+footer{
+  margin-top:32px; padding-top:20px; border-top:1px solid var(--line);
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink3);
+}
+footer a{color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Game xếp khối</p>
+  <h1>Xếp Khối</h1>
+  <p class="lede">Lưới 8×8, ba khối mỗi lượt, không xoay khối, không đồng hồ. Xếp cho đầy hàng hoặc cột để xoá.</p>
+  <div class="meta">
+    <span>Lưới 8 × 8</span><span>3 khối mỗi lượt</span><span>Không xoay khối</span><span>Chơi một mình</span>
+  </div>
+
+  <div class="links">
+    <a class="card" href="block-puzzle.html">
+      <span><b>Chơi ngay</b><i>Bản demo tiếng Việt — chạy thẳng trên trình duyệt</i></span>
+      <span class="go">CHƠI →</span>
+    </a>
+    <a class="card" href="block-puzzle-zh.html">
+      <span><b>方块拼图</b><i>Bản demo tiếng Trung</i></span>
+      <span class="go">玩 →</span>
+    </a>
+    <a class="card" href="ho-so-thiet-ke.html">
+      <span><b>Hồ sơ thiết kế</b><i>Luật chơi, công thức điểm, đồ hoạ, hiệu ứng — đủ để dựng lại bằng Unity</i></span>
+      <span class="go">ĐỌC →</span>
+    </a>
+    <a class="card" href="ho-so-thiet-ke-zh.html">
+      <span><b>设计文档</b><i>Hồ sơ thiết kế tiếng Trung</i></span>
+      <span class="go">读 →</span>
+    </a>
+  </div>
+
+  <footer>Mã nguồn tại <a href="https://github.com/luyen5158-cmyk/xep-khoi">github.com/luyen5158-cmyk/xep-khoi</a></footer>
+</div>
+</body>
+</html>
