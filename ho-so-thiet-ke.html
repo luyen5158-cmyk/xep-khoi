@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hồ Sơ Thiết Kế Xếp Khối</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#F4F6FB; --surface:#FFFFFF; --surface2:#E9ECF5;
+  --ink:#151A28; --ink2:#49516A; --ink3:#7C849C;
+  --line:#DCE0EC; --line2:#C6CCDE;
+  --accent:#A96C0B; --accent-bg:#FBF1DC;
+  --ok:#1C8A55; --bad:#C13A33;
+  --shadow:0 1px 2px rgba(21,26,40,.06), 0 8px 24px rgba(21,26,40,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1020; --surface:#151B2C; --surface2:#1D2437;
+    --ink:#ECEFF8; --ink2:#A6AEC6; --ink3:#6E7793;
+    --line:#262E46; --line2:#333D59;
+    --accent:#FFC65C; --accent-bg:#2B2413;
+    --ok:#4FD08A; --bad:#FF7E76;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1020; --surface:#151B2C; --surface2:#1D2437;
+  --ink:#ECEFF8; --ink2:#A6AEC6; --ink3:#6E7793;
+  --line:#262E46; --line2:#333D59;
+  --accent:#FFC65C; --accent-bg:#2B2413;
+  --ok:#4FD08A; --bad:#FF7E76;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Be Vietnam Pro", system-ui, sans-serif;
+  font-size:16px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:0 24px 96px}
+.col{max-width:660px}
+
+/* ---------- Chữ ---------- */
+h1,h2,h3{font-family:"Archivo", system-ui, sans-serif; text-wrap:balance; margin:0}
+h1{font-variation-settings:"wdth" 118,"wght" 800; font-size:clamp(38px,6.2vw,62px); line-height:1.02; letter-spacing:-.02em}
+h2{font-variation-settings:"wdth" 112,"wght" 700; font-size:clamp(23px,3vw,30px); line-height:1.15; letter-spacing:-.01em}
+h3{font-variation-settings:"wdth" 100,"wght" 700; font-size:17px; line-height:1.3}
+p{margin:0}
+.eyebrow{
+  font-family:"JetBrains Mono", monospace; font-size:11px; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+}
+.lede{font-size:19px; line-height:1.55; color:var(--ink2)}
+.mono{font-family:"JetBrains Mono", monospace; font-size:13.5px}
+strong{font-weight:600; color:var(--ink)}
+code{
+  font-family:"JetBrains Mono", monospace; font-size:.87em;
+  background:var(--surface2); padding:.12em .4em; border-radius:4px; color:var(--ink)
+}
+
+/* ---------- Khung ---------- */
+header{padding:76px 0 8px}
+header .col{display:flex; flex-direction:column; gap:20px}
+.meta{
+  display:flex; flex-wrap:wrap; gap:8px 10px; font-family:"JetBrains Mono",monospace;
+  font-size:11.5px; color:var(--ink3); padding-top:4px;
+}
+.meta span{border:1px solid var(--line); border-radius:100px; padding:3px 11px}
+
+section{padding-top:60px}
+.head{display:flex; flex-direction:column; gap:10px; margin-bottom:26px}
+.stack{display:flex; flex-direction:column; gap:16px}
+.rule{height:1px; background:var(--line); border:0; margin:0}
+
+/* ---------- Dải tràn viền ---------- */
+.strip{
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:14px; padding:26px; box-shadow:var(--shadow); margin-top:26px;
+}
+.strip-title{
+  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink3); margin-bottom:18px;
+}
+.scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+
+/* ---------- Danh sách luật ---------- */
+.rules{display:flex; flex-direction:column; gap:2px; counter-reset:r}
+.rules li{
+  list-style:none; display:grid; grid-template-columns:34px 1fr; gap:14px;
+  padding:13px 0; border-bottom:1px solid var(--line); align-items:baseline;
+}
+.rules li:last-child{border-bottom:0}
+.rules li::before{
+  counter-increment:r; content:"R" counter(r);
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:700;
+  color:var(--accent); letter-spacing:.04em;
+}
+.rules ul{margin:0; padding:0}
+.no{color:var(--bad); font-weight:600}
+.yes{color:var(--ok); font-weight:600}
+
+/* ---------- Bảng ---------- */
+table{border-collapse:collapse; width:100%; font-size:14.5px}
+th,td{text-align:left; padding:10px 14px 10px 0; border-bottom:1px solid var(--line); vertical-align:top}
+th{
+  font-family:"JetBrains Mono",monospace; font-size:10.5px; font-weight:700;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--ink3); padding-bottom:8px;
+}
+td.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* ---------- Bộ khối ---------- */
+.shapes{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:14px}
+.shape{
+  background:var(--surface2); border-radius:10px; padding:14px 10px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.shape .nm{font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--ink3); letter-spacing:.04em}
+.lvtag{
+  display:inline-block; font-family:"JetBrains Mono",monospace; font-size:10.5px; font-weight:700;
+  color:var(--accent); background:var(--accent-bg); border-radius:5px; padding:2px 8px; letter-spacing:.05em;
+}
+.lvrow{display:flex; align-items:center; gap:12px; margin:26px 0 14px}
+.lvrow .ln{flex:1; height:1px; background:var(--line)}
+
+/* ---------- Màu khối ---------- */
+.sw{display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:12px}
+.sw div{border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:44px}
+.sw b{font-family:"JetBrains Mono",monospace; font-size:11px; color:#10131c; font-weight:700}
+.sw i{font-style:normal; font-family:"JetBrains Mono",monospace; font-size:11px; color:#10131c; opacity:.72}
+
+/* ---------- Trạng thái ô ---------- */
+.states{display:grid; grid-template-columns:repeat(auto-fit,minmax(126px,1fr)); gap:16px}
+.state{display:flex; flex-direction:column; gap:9px; align-items:flex-start}
+.state .cap{font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink3)}
+.state .dsc{font-size:13px; color:var(--ink2); line-height:1.45}
+.demo-cell{width:52px; height:52px; border-radius:10px}
+.c-empty{background:var(--surface2); box-shadow:inset 0 0 0 1px var(--line2)}
+.c-fill{background:#5C9DFF; box-shadow:inset 0 -4px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.28)}
+.c-prev{background:var(--surface2); box-shadow:inset 0 0 0 2px var(--ink3)}
+.c-bad{background:rgba(193,58,51,.28); box-shadow:inset 0 0 0 2px var(--bad)}
+.c-clear{background:#FFF3CE; box-shadow:0 0 22px 7px rgba(255,209,102,.75), inset 0 0 0 1px #FFD166}
+
+/* ---------- Thông số kỹ thuật ---------- */
+.spec{display:grid; grid-template-columns:auto 1fr; gap:9px 20px; font-size:14px; align-items:baseline}
+.spec dt{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink3); letter-spacing:.05em; text-transform:uppercase; white-space:nowrap}
+.spec dd{margin:0; color:var(--ink2)}
+.spec dd b{color:var(--ink)}
+
+/* ---------- Timeline hiệu ứng ---------- */
+.tl{display:flex; flex-direction:column; gap:0; min-width:520px}
+.tl-row{display:grid; grid-template-columns:78px 1fr; gap:16px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line)}
+.tl-row:last-child{border-bottom:0}
+.tl-ms{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--accent); font-variant-numeric:tabular-nums; font-weight:700}
+.tl-bar{height:9px; border-radius:5px; background:var(--accent); opacity:.85}
+.tl-txt{font-size:13.5px; color:var(--ink2); margin-top:5px}
+
+/* ---------- Ghi chú ---------- */
+.note{
+  border-left:3px solid var(--accent); background:var(--accent-bg);
+  padding:14px 18px; border-radius:0 10px 10px 0; font-size:14.5px; color:var(--ink2);
+}
+.note b{color:var(--ink)}
+
+/* ---------- Checklist ---------- */
+.chk{display:flex; flex-direction:column; gap:0}
+.chk li{
+  list-style:none; display:grid; grid-template-columns:22px 1fr auto; gap:14px;
+  padding:12px 0; border-bottom:1px solid var(--line); align-items:baseline; font-size:15px;
+}
+.chk li:last-child{border-bottom:0}
+.chk .box{
+  width:15px; height:15px; border:1.5px solid var(--line2); border-radius:4px;
+  display:block; transform:translateY(2px);
+}
+.chk .done .box{background:var(--ok); border-color:var(--ok)}
+.chk .tag{font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--ink3); white-space:nowrap}
+.chk .done span:nth-child(2){color:var(--ink3); text-decoration:line-through}
+
+svg{display:block; max-width:100%; height:auto}
+footer{margin-top:70px; padding-top:24px; border-top:1px solid var(--line); font-size:13.5px; color:var(--ink3)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <div class="col">
+    <p class="eyebrow">Hồ sơ thiết kế · Game xếp khối</p>
+    <h1>Xếp Khối</h1>
+    <p class="lede">Toàn bộ quy trình, luật chơi và mô hình đồ hoạ của một game block puzzle — viết ở mức đủ chi tiết để dựng lại được bằng Unity mà không phải đoán thêm bất cứ con số nào.</p>
+    <div class="meta">
+      <span>Lưới 8 × 8</span><span>3 khối mỗi lượt</span><span>Không xoay khối</span><span>Màn dọc 9:16</span><span>Chơi một mình, không giới hạn thời gian</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1. VÒNG LẶP ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">01 · Quy trình mô hình</p>
+    <h2>Vòng lặp trò chơi</h2>
+    <p>Đây là bộ khung mà mọi thứ khác treo lên. Một <strong>lượt</strong> bắt đầu khi người chơi chạm vào khối và kết thúc khi hiệu ứng xóa chạy xong. Máy chỉ kiểm tra thua ở đúng một chỗ: sau khi lượt kết thúc.</p>
+  </div>
+
+  <div class="strip scroll">
+    <p class="strip-title">Sơ đồ luồng một lượt chơi</p>
+    <svg viewBox="0 0 960 400" width="960" role="img" aria-label="Sơ đồ vòng lặp trò chơi xếp khối">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink3)"/>
+        </marker>
+      </defs>
+      <g font-family="Be Vietnam Pro, sans-serif" font-size="13">
+
+        <!-- Phát khối -->
+        <rect x="14" y="150" width="130" height="56" rx="10" fill="var(--surface2)" stroke="var(--line2)"/>
+        <text x="79" y="173" text-anchor="middle" fill="var(--ink)" font-weight="600">Phát 3 khối</text>
+        <text x="79" y="190" text-anchor="middle" fill="var(--ink3)" font-size="11.5">theo level hiện tại</text>
+
+        <!-- Kéo thả -->
+        <rect x="180" y="150" width="130" height="56" rx="10" fill="var(--surface2)" stroke="var(--line2)"/>
+        <text x="245" y="173" text-anchor="middle" fill="var(--ink)" font-weight="600">Người chơi kéo</text>
+        <text x="245" y="190" text-anchor="middle" fill="var(--ink3)" font-size="11.5">bóng mờ bám ngón tay</text>
+
+        <!-- Quyết định hợp lệ -->
+        <path d="M 411 138 L 484 178 L 411 218 L 338 178 Z" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="411" y="175" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="12.5">Đặt vừa?</text>
+        <text x="411" y="191" text-anchor="middle" fill="var(--ink3)" font-size="11">trong lưới &amp; ô trống</text>
+
+        <!-- Đặt vào lưới -->
+        <rect x="520" y="150" width="128" height="56" rx="10" fill="var(--surface2)" stroke="var(--line2)"/>
+        <text x="584" y="173" text-anchor="middle" fill="var(--ink)" font-weight="600">Ghi vào lưới</text>
+        <text x="584" y="190" text-anchor="middle" fill="var(--ink3)" font-size="11.5">+1 điểm mỗi ô</text>
+
+        <!-- Quyết định hàng đầy -->
+        <path d="M 758 138 L 831 178 L 758 218 L 685 178 Z" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="758" y="175" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="12.5">Có hàng đầy?</text>
+        <text x="758" y="191" text-anchor="middle" fill="var(--ink3)" font-size="11">quét 8 hàng + 8 cột</text>
+
+        <!-- Xóa + hiệu ứng -->
+        <rect x="690" y="36" width="136" height="62" rx="10" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="758" y="58" text-anchor="middle" fill="var(--ink)" font-weight="600">Xóa + pháo hoa</text>
+        <text x="758" y="75" text-anchor="middle" fill="var(--ink3)" font-size="11.5">âm thanh nổ, cộng điểm</text>
+        <text x="758" y="90" text-anchor="middle" fill="var(--ink3)" font-size="11.5">combo + 1</text>
+
+        <!-- Hết khối? -->
+        <path d="M 411 288 L 484 324 L 411 360 L 338 324 Z" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="411" y="322" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="12.5">Còn nước đi?</text>
+        <text x="411" y="338" text-anchor="middle" fill="var(--ink3)" font-size="11">khối nào đặt được không</text>
+
+        <!-- Thua -->
+        <rect x="60" y="296" width="118" height="56" rx="10" fill="var(--surface)" stroke="var(--bad)"/>
+        <text x="119" y="319" text-anchor="middle" fill="var(--bad)" font-weight="600">Kết thúc</text>
+        <text x="119" y="336" text-anchor="middle" fill="var(--ink3)" font-size="11.5">hiện điểm, chơi lại</text>
+
+        <!-- Mũi tên -->
+        <g stroke="var(--ink3)" stroke-width="1.4" fill="none" marker-end="url(#ar)">
+          <path d="M 144 178 L 174 178"/>
+          <path d="M 310 178 L 332 178"/>
+          <path d="M 484 178 L 514 178"/>
+          <path d="M 648 178 L 679 178"/>
+          <path d="M 758 138 L 758 104"/>
+          <path d="M 826 67 C 890 67 906 178 906 300 L 906 324 L 490 324"/>
+          <path d="M 758 218 L 758 250 L 411 250 L 411 284"/>
+          <path d="M 338 324 L 184 324"/>
+          <path d="M 411 360 L 411 382 L 79 382 L 79 212"/>
+          <path d="M 411 218 C 411 254 245 244 245 212"/>
+        </g>
+
+        <!-- Nhãn nhánh -->
+        <g font-size="11" font-family="JetBrains Mono, monospace" font-weight="700">
+          <text x="493" y="171" fill="var(--ok)">CÓ</text>
+          <text x="330" y="252" fill="var(--bad)" text-anchor="end">KHÔNG · trả khối về khay</text>
+          <text x="768" y="122" fill="var(--ok)">CÓ</text>
+          <text x="768" y="242" fill="var(--ink3)">KHÔNG</text>
+          <text x="262" y="316" fill="var(--bad)" text-anchor="end">KHÔNG</text>
+          <text x="424" y="378" fill="var(--ok)">CÓ · hết 3 khối thì phát tiếp</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="col" style="margin-top:22px">
+    <div class="note"><b>Điểm dễ sai nhất:</b> chỉ kiểm tra thua <b>sau</b> khi hiệu ứng xóa chạy xong và khay đã được nạp lại. Kiểm tra sớm hơn sẽ báo thua oan, vì hàng sắp bị xóa vẫn đang chiếm chỗ trên lưới.</div>
+  </div>
+</section>
+
+<!-- ============ 2. LUẬT CHƠI ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">02 · Quy định</p>
+    <h2>Luật chơi</h2>
+    <p>Mười điều dưới đây là toàn bộ luật. Ba điều đầu là thứ tách game này khỏi Tetris — và cũng là ba thứ người mới hay làm sai.</p>
+  </div>
+
+  <div class="col">
+    <ol class="rules">
+      <li><span><strong>Khối không rơi.</strong> Đặt ở đâu nằm yên ở đó. Không có trọng lực, không có va chạm, không có "rơi xuống đáy". Lưới là một mảng tĩnh.</span></li>
+      <li><span><strong>Khối không xoay được.</strong> Hình dạng phát ra là hình dạng phải dùng. Đây là quyết định thiết kế cố ý: nó biến trò chơi từ phản xạ tay thành bài toán sắp xếp, và bỏ luôn nút xoay khỏi màn hình cảm ứng.</span></li>
+      <li><span><strong>Không có đồng hồ đếm giờ.</strong> Người chơi nghĩ bao lâu cũng được. Áp lực đến từ chỗ trống cạn dần, không phải từ thời gian.</span></li>
+      <li><span><strong>Mỗi lượt phát đúng 3 khối.</strong> Dùng hết cả ba mới được phát bộ mới. Không được bỏ khối, không được đổi khối.</span></li>
+      <li><span><strong>Đặt hợp lệ khi và chỉ khi</strong> mọi ô của khối đều nằm trong lưới <span class="yes">và</span> mọi ô đó đang trống. Chỉ cần một ô phạm luật là cả khối bị <span class="no">từ chối</span> và trả về khay.</span></li>
+      <li><span><strong>Xóa khi một hàng ngang hoặc một cột dọc đầy đủ 8 ô.</strong> Quét toàn bộ 8 hàng và 8 cột sau mỗi lần đặt.</span></li>
+      <li><span><strong>Xóa đồng thời.</strong> Nếu một nước đi làm đầy nhiều hàng/cột cùng lúc, tất cả biến mất trong cùng một nhịp và tính chung một lần ăn điểm. Ô nằm ở giao điểm chỉ được tính một lần.</span></li>
+      <li><span><strong>Combo</strong> tăng thêm 1 mỗi lượt liên tiếp có xóa hàng, và <span class="no">reset về 0</span> ngay khi có một lượt đặt khối mà không xóa được gì.</span></li>
+      <li><span><strong>Level tăng theo điểm, không bao giờ giảm.</strong> Level cao mở khóa khối to và hiểm hơn, đó là toàn bộ cơ chế tăng độ khó.</span></li>
+      <li><span><strong>Thua khi không còn khối nào trong khay đặt được vào bất kỳ vị trí nào trên lưới.</strong> Máy phải tự dò 64 vị trí × số khối còn lại để xác nhận — không đoán, không ước lượng.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 3. CÁCH CHƠI ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">03 · Trải nghiệm</p>
+    <h2>Cách chơi &amp; thao tác</h2>
+    <p>Toàn bộ game chỉ có một thao tác duy nhất: kéo và thả. Chất lượng của trò chơi nằm gần hết ở chỗ thao tác đó có "đã tay" hay không.</p>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">Bốn nhịp của một thao tác kéo</p>
+    <div class="scroll">
+      <table style="min-width:560px">
+        <thead><tr><th style="width:76px">Nhịp</th><th style="width:150px">Người chơi làm</th><th>Máy phản hồi ngay lập tức</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td><strong>Chạm</strong> vào khối trong khay</td><td>Khối trong khay mờ đi còn 25%. Một bản sao <strong>phóng to đúng bằng kích thước ô lưới</strong> hiện ra và bám theo ngón tay.</td></tr>
+          <tr><td class="num">2</td><td><strong>Nhấc</strong> ngón tay lên</td><td>Bản sao được đẩy cao hơn điểm chạm <code>1.3</code> ô. Đây là chi tiết bắt buộc trên điện thoại: nếu không, ngón tay che mất khối và người chơi không thấy mình đang đặt vào đâu.</td></tr>
+          <tr><td class="num">3</td><td><strong>Rê</strong> trên lưới</td><td>Các ô đích sáng lên trắng nếu đặt được, đỏ nếu không. Người chơi biết kết quả <em>trước khi</em> thả tay — không bao giờ phải thử rồi hối hận.</td></tr>
+          <tr><td class="num">4</td><td><strong>Thả</strong></td><td>Hợp lệ: khối bám vào lưới, kêu "tách", cộng điểm. Không hợp lệ: khối biến mất, khối trong khay sáng lại như cũ. <strong>Không phạt, không báo lỗi.</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col" style="margin-top:22px">
+    <div class="note"><b>Quy tắc bám lưới:</b> ô đích được tính từ <b>góc trên-trái của khối</b>, không phải từ vị trí ngón tay. Công thức: <code>cột = round((khối.x − lưới.x) / bước)</code> với <code>bước = cạnh_ô + khe_hở</code>. Dùng <code>round</code> chứ không phải <code>floor</code> — nhờ vậy khối tự hút về ô gần nhất và người chơi không cần nhắm chính xác.</div>
+  </div>
+</section>
+
+<!-- ============ 4. ĐIỂM & LEVEL ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">04 · Cân bằng</p>
+    <h2>Tính điểm &amp; level</h2>
+    <p>Công thức thưởng đậm cho việc xóa nhiều hàng cùng lúc. Mục đích: khuyến khích người chơi nhịn, xếp dồn, rồi ăn lớn — thay vì xóa lắt nhắt từng hàng một.</p>
+  </div>
+
+  <div class="strip scroll">
+    <p class="strip-title">Công thức điểm</p>
+    <table style="min-width:600px">
+      <thead><tr><th style="width:150px">Hành động</th><th style="width:250px">Công thức</th><th>Ví dụ</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Đặt khối</strong></td><td class="num">+ 1 × số ô của khối</td><td>Khối vuông 2×2 → <strong>+4</strong></td></tr>
+        <tr><td><strong>Xóa hàng</strong></td><td class="num">+ số_ô_xóa × 10 × số_hàng</td><td>1 hàng → 8×10×1 = <strong>+80</strong></td></tr>
+        <tr><td><strong>Xóa nhiều hàng</strong></td><td class="num">cùng công thức, nhân bình phương</td><td>2 hàng → 15×10×2 = <strong>+300</strong></td></tr>
+        <tr><td><strong>Thưởng combo</strong></td><td class="num">+ 25 × combo &nbsp;<span style="color:var(--ink3)">(từ combo 2)</span></td><td>Combo 4 → <strong>+100</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="strip scroll">
+    <p class="strip-title">Thang level · <code>level = 1 + floor(điểm / 700)</code>, tối đa 6</p>
+    <table style="min-width:620px">
+      <thead><tr><th style="width:74px">Level</th><th style="width:110px">Mốc điểm</th><th style="width:210px">Khối mới mở khóa</th><th>Cảm giác cho người chơi</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="num">0</td><td>1 ô, thanh 2–3, vuông 2×2</td><td>Dễ thở, học cách chơi</td></tr>
+        <tr><td class="num">2</td><td class="num">700</td><td>chữ L nhỏ, thanh 4</td><td>Bắt đầu phải nghĩ</td></tr>
+        <tr><td class="num">3</td><td class="num">1 400</td><td>L dài, chữ S / Z</td><td>Chữ S là khối gây khó chịu nhất</td></tr>
+        <tr><td class="num">4</td><td class="num">2 100</td><td>chữ T, thanh 5</td><td>Thanh 5 đòi hỏi phải chừa chỗ</td></tr>
+        <tr><td class="num">5</td><td class="num">2 800</td><td>dấu cộng, chữ nhật 2×3</td><td>Lưới bắt đầu chật</td></tr>
+        <tr><td class="num">6</td><td class="num">3 500</td><td>vuông 3×3</td><td>Chín ô một lúc — rất căng</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col" style="margin-top:22px">
+    <div class="note"><b>Cách tăng độ khó ngầm:</b> level cao không chỉ mở khối mới mà còn <b>tăng xác suất bốc trúng khối to</b>. Cho mỗi hình một trọng số <code>1 + (level − level_mở_khóa) × 0.35</code>, từ level 4 cộng thêm <code>số_ô × 0.15</code>. Khối nhỏ vẫn xuất hiện — nếu chặn hẳn, người chơi sẽ thua một cách oan ức thay vì vì đánh dở.</div>
+  </div>
+</section>
+
+<!-- ============ 5. BỘ KHỐI ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">05 · Nội dung</p>
+    <h2>Bộ khối hình — 26 hình</h2>
+    <p>Mỗi hình chỉ là một danh sách toạ độ <code>[hàng, cột]</code> tính từ góc trên-trái. Vì không có xoay, mỗi hướng của chữ L phải khai báo thành một hình riêng.</p>
+  </div>
+
+  <div class="strip">
+    <div class="lvrow"><span class="lvtag">LEVEL 1</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">6 hình cơ bản</span></div>
+    <div class="shapes" id="s1"></div>
+    <div class="lvrow"><span class="lvtag">LEVEL 2</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">L nhỏ 4 hướng + thanh 4</span></div>
+    <div class="shapes" id="s2"></div>
+    <div class="lvrow"><span class="lvtag">LEVEL 3</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">L dài + S / Z</span></div>
+    <div class="shapes" id="s3"></div>
+    <div class="lvrow"><span class="lvtag">LEVEL 4–6</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">T, thanh 5, cộng, chữ nhật, 3×3</span></div>
+    <div class="shapes" id="s4"></div>
+  </div>
+</section>
+
+<!-- ============ 6. ĐỒ HOẠ ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">06 · Mô hình đồ hoạ</p>
+    <h2>Đồ hoạ &amp; hiệu ứng</h2>
+    <p>Game này không cần một file ảnh nào. Toàn bộ hình ảnh dựng từ hình chữ nhật bo góc, đổ bóng trong, và hạt particle — nghĩa là bạn tự làm được hết mà không cần biết vẽ.</p>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">Bố cục màn hình dọc 9:16</p>
+    <div class="scroll">
+      <svg viewBox="0 0 700 330" width="700" role="img" aria-label="Sơ đồ bố cục màn hình dọc">
+        <g font-family="Be Vietnam Pro, sans-serif" font-size="12.5">
+          <rect x="248" y="10" width="204" height="310" rx="20" fill="var(--surface2)" stroke="var(--line2)"/>
+          <rect x="258" y="26" width="184" height="38" rx="8" fill="var(--surface)" stroke="var(--line2)"/>
+          <text x="350" y="50" text-anchor="middle" fill="var(--ink)" font-weight="600">ĐIỂM · LEVEL · KỶ LỤC</text>
+          <rect x="258" y="74" width="184" height="184" rx="10" fill="var(--surface)" stroke="var(--accent)"/>
+          <text x="350" y="162" text-anchor="middle" fill="var(--ink)" font-weight="600">LƯỚI 8 × 8</text>
+          <text x="350" y="180" text-anchor="middle" fill="var(--ink3)" font-size="11">luôn là hình vuông</text>
+          <rect x="258" y="268" width="184" height="42" rx="8" fill="var(--surface)" stroke="var(--line2)"/>
+          <text x="350" y="294" text-anchor="middle" fill="var(--ink)" font-weight="600">KHAY 3 KHỐI</text>
+
+          <g stroke="var(--ink3)" stroke-width="1.2" font-family="JetBrains Mono, monospace" font-size="11">
+            <path d="M 232 26 L 232 64" marker-start="url(#ar)" marker-end="url(#ar)"/>
+            <text x="222" y="49" text-anchor="end" fill="var(--ink2)">12 %</text>
+            <path d="M 232 74 L 232 258" marker-start="url(#ar)" marker-end="url(#ar)"/>
+            <text x="222" y="170" text-anchor="end" fill="var(--ink2)">58 %</text>
+            <path d="M 232 268 L 232 310" marker-start="url(#ar)" marker-end="url(#ar)"/>
+            <text x="222" y="293" text-anchor="end" fill="var(--ink2)">22 %</text>
+          </g>
+
+          <g font-size="12" fill="var(--ink2)">
+            <text x="480" y="44">Chỉ số luôn nằm trên cùng — ngón tay</text>
+            <text x="480" y="61">không bao giờ che mất điểm số.</text>
+            <text x="480" y="152">Lưới canh giữa. Cạnh ô tính bằng</text>
+            <text x="480" y="169">công thức bên dưới, kẹp trong</text>
+            <text x="480" y="186">khoảng 24–44 px để vừa mọi máy.</text>
+            <text x="480" y="290">Khay đặt thấp nhất, trong tầm</text>
+            <text x="480" y="307">ngón cái khi cầm một tay.</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <dl class="spec" style="margin-top:22px">
+      <dt>Cạnh ô</dt><dd><b>cạnh = (min(rộng, cao_khả_dụng) − khe×7 − đệm) / 8</b>, kẹp trong 24–44 px</dd>
+      <dt>Khe hở</dt><dd><b>4 px</b> cố định, không co giãn theo màn hình</dd>
+      <dt>Bo góc ô</dt><dd><b>≈ 18% cạnh ô</b> (ô 38 px → bo 7 px). Tỉ lệ này giữ khối trông "mềm" ở mọi kích thước</dd>
+      <dt>Khối trong khay</dt><dd>vẽ ở <b>62% cạnh ô lưới</b> — đủ nhỏ để xếp vừa 3 khối, đủ lớn để nhận ra hình</dd>
+    </dl>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">Năm trạng thái của một ô</p>
+    <div class="states">
+      <div class="state"><div class="demo-cell c-empty"></div><span class="cap">TRỐNG</span><span class="dsc">Nền mờ 5.5% trắng, viền trong 1 px.</span></div>
+      <div class="state"><div class="demo-cell c-fill"></div><span class="cap">CÓ KHỐI</span><span class="dsc">Màu đặc + vệt sáng 3 px trên, bóng tối 4 px dưới → hiệu ứng nổi khối.</span></div>
+      <div class="state"><div class="demo-cell c-prev"></div><span class="cap">XEM TRƯỚC</span><span class="dsc">Sáng trắng 30% khi khối đang lơ lửng phía trên và đặt được.</span></div>
+      <div class="state"><div class="demo-cell c-bad"></div><span class="cap">KHÔNG ĐẶT ĐƯỢC</span><span class="dsc">Đỏ 30%. Cảnh báo trước khi thả tay, không phải sau.</span></div>
+      <div class="state"><div class="demo-cell c-clear"></div><span class="cap">ĐANG XÓA</span><span class="dsc">Phóng 1.32×, độ sáng ×3.2, quầng sáng 26 px cùng màu khối.</span></div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">Bảng màu khối · 8 màu, bốc ngẫu nhiên</p>
+    <div class="sw">
+      <div style="background:#FF6B6B"><b>Đỏ san hô</b><i>#FF6B6B</i></div>
+      <div style="background:#FFA94D"><b>Cam</b><i>#FFA94D</i></div>
+      <div style="background:#FFD43B"><b>Vàng</b><i>#FFD43B</i></div>
+      <div style="background:#69DB7C"><b>Lục</b><i>#69DB7C</i></div>
+      <div style="background:#4DD4E8"><b>Lam ngọc</b><i>#4DD4E8</i></div>
+      <div style="background:#5C9DFF"><b>Xanh dương</b><i>#5C9DFF</i></div>
+      <div style="background:#B197FC"><b>Tím</b><i>#B197FC</i></div>
+      <div style="background:#F783AC"><b>Hồng</b><i>#F783AC</i></div>
+    </div>
+    <p style="margin-top:16px; font-size:14px; color:var(--ink2)">Tám màu này cùng độ sáng và cùng độ bão hoà, nên không màu nào "nặng" hơn màu nào khi nằm cạnh nhau trên lưới. Màu <strong>không mang ý nghĩa gì</strong> trong luật chơi — nó thuần tuý để mắt phân biệt được khối này với khối kia. Nền phải là màu tối trung tính (<code>#0B1020</code>) để cả tám màu đều nổi.</p>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">Dòng thời gian hiệu ứng xóa · tổng 340 ms</p>
+    <div class="scroll">
+      <div class="tl">
+        <div class="tl-row"><span class="tl-ms">0 ms</span><div><div class="tl-bar" style="width:8%"></div><div class="tl-txt">Phát âm thanh nổ. Sinh <strong>14 hạt pháo hoa cho mỗi ô</strong> bị xóa, bắn từ tâm ô ra mọi hướng.</div></div></div>
+        <div class="tl-row"><span class="tl-ms">0–120 ms</span><div><div class="tl-bar" style="width:35%"></div><div class="tl-txt">Ô phóng to lên <strong>1.32×</strong>, độ sáng đẩy lên <strong>3.2×</strong>, quầng sáng bung ra 26 px. Đây là khoảnh khắc "đã" nhất — đừng làm nhanh hơn.</div></div></div>
+        <div class="tl-row"><span class="tl-ms">120–340 ms</span><div><div class="tl-bar" style="width:65%"></div><div class="tl-txt">Ô co về <strong>0</strong> trong khi độ sáng tiếp tục tăng — trông như bị hút vào một điểm sáng rồi tắt.</div></div></div>
+        <div class="tl-row"><span class="tl-ms">340 ms</span><div><div class="tl-bar" style="width:8%"></div><div class="tl-txt">Xoá dữ liệu ô trong mảng, vẽ lại lưới, <strong>mở khoá thao tác</strong>, rồi mới kiểm tra thua.</div></div></div>
+        <div class="tl-row"><span class="tl-ms">~900 ms</span><div><div class="tl-bar" style="width:20%; opacity:.4"></div><div class="tl-txt">Hạt pháo hoa cuối cùng tắt. Hạt sống lâu hơn ô — cố ý, để dư âm kéo dài sau khi lưới đã sạch.</div></div></div>
+      </div>
+    </div>
+    <dl class="spec" style="margin-top:24px">
+      <dt>Số hạt</dt><dd><b>14 hạt / ô</b>. Xóa 1 hàng = 112 hạt. Xóa 3 hàng cùng lúc vẫn dưới 400 hạt — điện thoại yếu vẫn chạy mượt.</dd>
+      <dt>Vận tốc</dt><dd>hướng ngẫu nhiên 360°, tốc độ <b>1.6 – 5.8 px/khung</b>, cộng thêm một lực đẩy lên <b>−1.2</b> để hạt bay vổng lên trước khi rơi</dd>
+      <dt>Trọng lực</dt><dd><b>+0.16 px/khung²</b> — đủ để thấy đường cong parabol, không nặng đến mức hạt rơi thẳng</dd>
+      <dt>Ma sát</dt><dd><b>×0.985 mỗi khung</b>, hạt chậm dần thay vì bay đều</dd>
+      <dt>Tắt dần</dt><dd>độ sống giảm <b>0.014 – 0.034 mỗi khung</b>; bán kính hạt = <code>size × life</code> nên hạt vừa mờ vừa nhỏ lại</dd>
+      <dt>Chế độ trộn</dt><dd><b>cộng sáng</b> (<code>lighter</code> / Additive). Chỗ nhiều hạt chồng lên nhau tự cháy trắng — đây là thứ làm nó trông giống pháo hoa thật</dd>
+      <dt>Màu hạt</dt><dd>lấy đúng màu của ô vừa bị xoá, nên vụ nổ mang màu của thứ vừa biến mất</dd>
+    </dl>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">Âm thanh · ba tiếng, tự tổng hợp, không cần file</p>
+    <div class="scroll">
+      <table style="min-width:620px">
+        <thead><tr><th style="width:130px">Tiếng</th><th style="width:96px">Dài</th><th>Cấu tạo</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Đặt khối</strong></td><td class="num">100 ms</td><td>Sóng tam giác trượt <code>420 → 240 Hz</code>. Nhỏ và khô — nghe cả trăm lần một ván nên tuyệt đối không được chói.</td></tr>
+          <tr><td><strong>Nổ</strong></td><td class="num">500 ms +</td><td>Hai lớp chồng nhau: <strong>(1)</strong> nhiễu trắng qua bộ lọc thông thấp quét <code>2600 → 180 Hz</code> tạo tiếng "xoẹt"; <strong>(2)</strong> sóng sin trầm <code>150 → 42 Hz</code> tạo cú "thịch" ở ngực. Xóa càng nhiều hàng, tiếng càng dài và càng sáng.</td></tr>
+          <tr><td><strong>Lên level</strong></td><td class="num">340 ms</td><td>Bốn nốt sóng vuông <code>C-E-G-C</code> (523·659·784·1047 Hz) cách nhau 85 ms. Âm sắc 8-bit, gợi máy game cũ.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note" style="margin-top:20px"><b>Bắt buộc trên điện thoại:</b> trình duyệt và iOS chỉ cho phát âm thanh sau lần chạm đầu tiên của người dùng. Phải khởi tạo bộ máy âm thanh trong sự kiện chạm đầu tiên, nếu không cả ván sẽ im lặng.</div>
+  </div>
+</section>
+
+<!-- ============ 7. SCRIPT ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">07 · Dựng bằng Unity</p>
+    <h2>Chia việc cho từng script</h2>
+    <p>Mỗi script giữ đúng một trách nhiệm và chỉ nói chuyện với script kề nó. Chia sẵn như thế này thì lúc lỗi bạn biết ngay phải mở file nào.</p>
+  </div>
+
+  <div class="strip scroll">
+    <table style="min-width:660px">
+      <thead><tr><th style="width:170px">Script</th><th style="width:230px">Giữ dữ liệu gì</th><th>Chịu trách nhiệm</th></tr></thead>
+      <tbody>
+        <tr><td class="mono"><strong>GridManager</strong></td><td><code>Color?[8,8]</code></td><td>Nguồn sự thật duy nhất về lưới. Kiểm tra đặt được không, dò hàng/cột đầy, xoá ô. <strong>Không</strong> biết gì về chạm, điểm hay hiệu ứng.</td></tr>
+        <tr><td class="mono"><strong>BlockPiece</strong></td><td>danh sách toạ độ + màu</td><td>Mô tả một khối và tự vẽ chính nó. Là dữ liệu thuần, không tự di chuyển.</td></tr>
+        <tr><td class="mono"><strong>DragAndDrop</strong></td><td>khối đang cầm, độ lệch ngón tay</td><td>Chạm, kéo, bóng mờ, ô xem trước, quy tắc bám lưới. Hỏi GridManager "đặt được không" chứ không tự quyết.</td></tr>
+        <tr><td class="mono"><strong>TrayManager</strong></td><td>3 ô khối</td><td>Bốc khối theo trọng số của level, nạp lại khay khi hết cả ba.</td></tr>
+        <tr><td class="mono"><strong>ScoreManager</strong></td><td>điểm, combo, kỷ lục</td><td>Áp dụng công thức điểm, giữ và reset combo, lưu kỷ lục.</td></tr>
+        <tr><td class="mono"><strong>LevelManager</strong></td><td>level</td><td>Đổi điểm thành level, cung cấp bảng trọng số bốc khối cho TrayManager.</td></tr>
+        <tr><td class="mono"><strong>EffectsManager</strong></td><td>—</td><td>Nhận lệnh "nổ tại ô này, màu này": chạy Particle System và AudioSource. Không biết luật chơi.</td></tr>
+        <tr><td class="mono"><strong>GameManager</strong></td><td>trạng thái ván</td><td>Điều phối thứ tự một lượt, khoá thao tác trong lúc hiệu ứng chạy, kiểm tra thua, bật màn kết thúc.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 8. CHECKLIST ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">08 · Thứ tự làm</p>
+    <h2>Làm theo đúng thứ tự này</h2>
+    <p>Mỗi bước đều cho ra thứ chạy được và bấm thử được. Đừng làm hiệu ứng trước khi luật chơi chạy đúng — đó là cái bẫy phổ biến nhất.</p>
+  </div>
+
+  <div class="col">
+    <ol class="chk">
+      <li class="done"><span class="box"></span><span>Bản demo HTML chạy trên trình duyệt để cảm nhận cơ chế</span><span class="tag">XONG</span></li>
+      <li><span class="box"></span><span>Cài Unity Hub + Unity LTS + module Android Build Support</span><span class="tag">1 buổi</span></li>
+      <li><span class="box"></span><span>Vẽ lưới 8×8 bằng Prefab ô vuông, chưa cần chơi được</span><span class="tag">R1</span></li>
+      <li><span class="box"></span><span>Khai báo bộ khối, hiện 3 khối trong khay</span><span class="tag">R4</span></li>
+      <li><span class="box"></span><span>Kéo thả + ô xem trước + quy tắc bám lưới</span><span class="tag">R5</span></li>
+      <li><span class="box"></span><span>Dò hàng/cột đầy và xoá — chưa cần hiệu ứng</span><span class="tag">R6 · R7</span></li>
+      <li><span class="box"></span><span>Điểm, combo, level, kiểm tra thua</span><span class="tag">R8 – R10</span></li>
+      <li><span class="box"></span><span>Particle System pháo hoa + ba tiếng động</span><span class="tag">Mục 06</span></li>
+      <li><span class="box"></span><span>Build ra máy Android thật, chỉnh lại cỡ ô cho vừa tay</span><span class="tag">nửa ngày</span></li>
+      <li><span class="box"></span><span>Menu, icon, nhạc nền, xuất .aab, đăng Google Play</span><span class="tag">$25 một lần</span></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <p>Hồ sơ thiết kế game Xếp Khối · bản demo chạy được kèm theo tại <code>block-puzzle.html</code> — mọi con số trong tài liệu này đều lấy đúng từ bản demo đó.</p>
+</footer>
+
+</div>
+
+<script>
+// Vẽ minh hoạ bộ khối từ chính dữ liệu toạ độ dùng trong game
+const SHAPES = [
+  [1,"1 ô",       [[0,0]]],
+  [1,"ngang 2",   [[0,0],[0,1]]],
+  [1,"dọc 2",     [[0,0],[1,0]]],
+  [1,"ngang 3",   [[0,0],[0,1],[0,2]]],
+  [1,"dọc 3",     [[0,0],[1,0],[2,0]]],
+  [1,"vuông 2×2", [[0,0],[0,1],[1,0],[1,1]]],
+  [2,"L ↰",       [[0,0],[1,0],[1,1]]],
+  [2,"L ↱",       [[0,0],[0,1],[1,0]]],
+  [2,"L ↲",       [[0,0],[0,1],[1,1]]],
+  [2,"L ↳",       [[0,1],[1,0],[1,1]]],
+  [2,"ngang 4",   [[0,0],[0,1],[0,2],[0,3]]],
+  [2,"dọc 4",     [[0,0],[1,0],[2,0],[3,0]]],
+  [3,"L dài",     [[0,0],[1,0],[2,0],[2,1]]],
+  [3,"J dài",     [[0,1],[1,1],[2,1],[2,0]]],
+  [3,"L ngang",   [[0,0],[0,1],[0,2],[1,0]]],
+  [3,"J ngang",   [[0,0],[0,1],[0,2],[1,2]]],
+  [3,"chữ S",     [[0,0],[0,1],[1,1],[1,2]]],
+  [3,"chữ Z",     [[0,1],[0,2],[1,0],[1,1]]],
+  [4,"chữ T",     [[0,0],[0,1],[0,2],[1,1]]],
+  [4,"chữ T ngược",[[1,0],[1,1],[1,2],[0,1]]],
+  [4,"ngang 5",   [[0,0],[0,1],[0,2],[0,3],[0,4]]],
+  [4,"dọc 5",     [[0,0],[1,0],[2,0],[3,0],[4,0]]],
+  [5,"dấu cộng",  [[0,1],[1,0],[1,1],[1,2],[2,1]]],
+  [5,"2×3",       [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]]],
+  [5,"3×2",       [[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]]],
+  [6,"vuông 3×3", [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]]]
+];
+const PALETTE = ["#FF6B6B","#FFA94D","#FFD43B","#69DB7C","#4DD4E8","#5C9DFF","#B197FC","#F783AC"];
+const U = 13, G = 2.5, BOX = 5 * U + 4 * G;   // khung chung để mọi hình cùng tỉ lệ
+
+SHAPES.forEach(([lv, name, cells], i) => {
+  const target = document.getElementById(lv <= 3 ? "s" + lv : "s4");
+  if (!target) return;
+  const rows = Math.max(...cells.map(c => c[0])) + 1;
+  const cols = Math.max(...cells.map(c => c[1])) + 1;
+  const w = cols * U + (cols - 1) * G, h = rows * U + (rows - 1) * G;
+  const ox = (BOX - w) / 2, oy = (BOX - h) / 2;
+  const color = PALETTE[i % PALETTE.length];
+  const blocks = cells.map(([r, c]) =>
+    `<rect x="${(ox + c * (U + G)).toFixed(1)}" y="${(oy + r * (U + G)).toFixed(1)}" width="${U}" height="${U}" rx="2.6" fill="${color}"/>`
+  ).join("");
+  const el = document.createElement("div");
+  el.className = "shape";
+  el.innerHTML =
+    `<svg viewBox="0 0 ${BOX} ${BOX}" width="${BOX}" height="${BOX}" role="img" aria-label="Khối ${name}">${blocks}</svg>` +
+    `<span class="nm">${name}</span>`;
+  target.appendChild(el);
+});
+</script>
+</body>
+</html>

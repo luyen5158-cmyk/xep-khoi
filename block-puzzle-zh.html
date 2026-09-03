@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>方块拼图 - Block Puzzle</title>
+<style>
+  /* ===== 通用界面 ===== */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%;
+    background: radial-gradient(circle at 50% 0%, #1e2a4a 0%, #0b1020 60%, #05070f 100%);
+    color: #e8ecf8;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+    overflow: hidden; touch-action: none; user-select: none;
+  }
+  #app {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px; padding: 12px;
+  }
+
+  /* ===== 分数栏 ===== */
+  #hud { display: flex; gap: 10px; align-items: stretch; width: 100%; max-width: 380px; }
+  .stat {
+    flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10);
+    border-radius: 12px; padding: 7px 10px; text-align: center;
+  }
+  .stat .label { font-size: 11px; letter-spacing: .18em; color: #8b97b8; }
+  .stat .value { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.25; }
+  #combo {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.4);
+    font-size: 40px; font-weight: 800; color: #ffd166; text-shadow: 0 0 24px rgba(255,209,102,.9);
+    opacity: 0; pointer-events: none; z-index: 30; white-space: nowrap;
+  }
+  #combo.show { animation: comboPop .85s ease-out; }
+  @keyframes comboPop {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(.4); }
+    25%  { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+    70%  { opacity: 1; transform: translate(-50%,-60%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-90%) scale(.9); }
+  }
+
+  /* ===== 网格棋盘 ===== */
+  #board {
+    display: grid; gap: 4px; padding: 7px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10);
+    border-radius: 14px; position: relative;
+    box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  }
+  .cell {
+    border-radius: 7px; background: rgba(255,255,255,.055);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.035);
+    transition: background-color .12s, box-shadow .12s, transform .12s;
+  }
+  .cell.filled { box-shadow: inset 0 -3px 0 rgba(0,0,0,.28), inset 0 2px 0 rgba(255,255,255,.28); }
+  .cell.preview { background: rgba(255,255,255,.30) !important; }
+  .cell.invalid { background: rgba(255, 80, 90, .30) !important; }
+  .cell.clearing { animation: burst .34s ease-out forwards; }
+  @keyframes burst {
+    0%   { transform: scale(1);   filter: brightness(1); }
+    35%  { transform: scale(1.32); filter: brightness(3.2); box-shadow: 0 0 26px 8px currentColor; }
+    100% { transform: scale(0);   filter: brightness(4); }
+  }
+
+  /* ===== 待放方块托盘 ===== */
+  #tray {
+    display: flex; gap: 10px; align-items: center; justify-content: center;
+    min-height: 108px; width: 100%; max-width: 380px;
+  }
+  .slot { flex: 1; display: flex; align-items: center; justify-content: center; height: 104px; }
+  .piece { display: grid; gap: 4px; cursor: grab; transition: transform .15s, opacity .2s; }
+  .piece.used { opacity: 0; pointer-events: none; }
+  .piece.dragging { opacity: .25; }
+  .blk { border-radius: 7px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.28), inset 0 2px 0 rgba(255,255,255,.28); }
+
+  /* 正在拖动的方块，跟随手指移动 */
+  #ghost { position: fixed; display: grid; gap: 4px; pointer-events: none; z-index: 40;
+           filter: drop-shadow(0 12px 20px rgba(0,0,0,.55)); }
+
+  /* ===== 烟花 ===== */
+  #fx { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
+
+  /* ===== 结束界面 ===== */
+  #over {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    background: rgba(5,7,15,.86); backdrop-filter: blur(6px);
+  }
+  #over.show { display: flex; }
+  #over h1 { margin: 0; font-size: 30px; letter-spacing: .04em; }
+  #over p { margin: 0; color: #9aa6c8; }
+  button {
+    font: inherit; font-weight: 700; font-size: 16px; color: #08101f;
+    background: linear-gradient(180deg, #7ee0ff, #35b6ff);
+    border: 0; border-radius: 12px; padding: 12px 34px; cursor: pointer;
+    box-shadow: 0 8px 22px rgba(53,182,255,.35); letter-spacing: .06em;
+  }
+  button:active { transform: translateY(1px); }
+  #hint { font-size: 12px; color: #6f7ba0; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="hud">
+    <div class="stat"><div class="label">分数</div><div class="value" id="score">0</div></div>
+    <div class="stat"><div class="label">等级</div><div class="value" id="level">1</div></div>
+    <div class="stat"><div class="label">最高分</div><div class="value" id="best">0</div></div>
+  </div>
+
+  <div id="board"></div>
+
+  <div id="tray">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+
+  <div id="hint">拖动方块放入网格 · 填满整行或整列即可消除</div>
+</div>
+
+<div id="combo"></div>
+<canvas id="fx"></canvas>
+
+<div id="over">
+  <h1>无路可走！</h1>
+  <p>你的得分：<b id="finalScore">0</b></p>
+  <button id="again">再玩一次</button>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   1. 常量与方块形状数据
+   ========================================================= */
+const W = 8, H = 8;          // 8×8 网格
+const GAP = 4;               // 格子之间的间距（像素）
+let CELL = 38;               // 单个格子的边长，会按屏幕重新计算
+let STEP = CELL + GAP;
+
+// 每个形状 = 一组坐标 [行, 列]。lv = 从第几级开始出现。
+const SHAPES = [
+  { lv:1, cells:[[0,0]] },                                  // 单格
+  { lv:1, cells:[[0,0],[0,1]] },                            // 横向 2
+  { lv:1, cells:[[0,0],[1,0]] },                            // 纵向 2
+  { lv:1, cells:[[0,0],[0,1],[0,2]] },                      // 横向 3
+  { lv:1, cells:[[0,0],[1,0],[2,0]] },                      // 纵向 3
+  { lv:1, cells:[[0,0],[0,1],[1,0],[1,1]] },                // 2×2 方块
+  { lv:2, cells:[[0,0],[1,0],[1,1]] },                      // 小 L 形（四个方向）
+  { lv:2, cells:[[0,0],[0,1],[1,0]] },
+  { lv:2, cells:[[0,0],[0,1],[1,1]] },
+  { lv:2, cells:[[0,1],[1,0],[1,1]] },
+  { lv:2, cells:[[0,0],[0,1],[0,2],[0,3]] },                // 横向 4
+  { lv:2, cells:[[0,0],[1,0],[2,0],[3,0]] },                // 纵向 4
+  { lv:3, cells:[[0,0],[1,0],[2,0],[2,1]] },                // 长 L 形
+  { lv:3, cells:[[0,1],[1,1],[2,1],[2,0]] },
+  { lv:3, cells:[[0,0],[0,1],[0,2],[1,0]] },
+  { lv:3, cells:[[0,0],[0,1],[0,2],[1,2]] },
+  { lv:3, cells:[[0,0],[0,1],[1,1],[1,2]] },                // S 形 / Z 形
+  { lv:3, cells:[[0,1],[0,2],[1,0],[1,1]] },
+  { lv:4, cells:[[0,0],[0,1],[0,2],[1,1]] },                // T 形
+  { lv:4, cells:[[1,0],[1,1],[1,2],[0,1]] },
+  { lv:4, cells:[[0,0],[0,1],[0,2],[0,3],[0,4]] },          // 横向 5
+  { lv:4, cells:[[0,0],[1,0],[2,0],[3,0],[4,0]] },          // 纵向 5
+  { lv:5, cells:[[0,1],[1,0],[1,1],[1,2],[2,1]] },          // 十字形
+  { lv:5, cells:[[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]] },    // 2×3 长方形
+  { lv:5, cells:[[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]] },    // 3×2 长方形
+  { lv:6, cells:[[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]] } // 3×3 方块
+];
+
+const COLORS = ["#ff6b6b","#ffa94d","#ffd43b","#69db7c","#4dd4e8","#5c9dff","#b197fc","#f783ac"];
+
+/* =========================================================
+   2. 游戏状态
+   ========================================================= */
+let grid   = [];        // grid[r][c] = null 或颜色值
+let tray   = [];        // 待放的 3 个方块，元素为 null 表示已用掉
+let score  = 0;
+let level  = 1;
+let combo  = 0;
+let busy   = false;     // 消除动画播放中 → 锁住操作
+let best   = 0;
+try { best = parseInt(localStorage.getItem("bp_best_zh") || "0", 10) || 0; } catch (e) {}
+
+const boardEl = document.getElementById("board");
+const trayEl  = document.getElementById("tray");
+const fx      = document.getElementById("fx");
+const ctx     = fx.getContext("2d");
+let cellEls   = [];     // 指向每个格子 DOM 元素的引用
+
+/* =========================================================
+   3. 生成网格
+   ========================================================= */
+function sizeToScreen() {
+  // 计算格子边长，使网格加托盘刚好放进屏幕
+  const maxW = Math.min(window.innerWidth - 24, 380);
+  const maxH = window.innerHeight - 260;
+  CELL = Math.floor((Math.min(maxW, maxH) - GAP * (W - 1) - 14) / W);
+  CELL = Math.max(24, Math.min(CELL, 44));
+  STEP = CELL + GAP;
+  boardEl.style.gridTemplateColumns = `repeat(${W}, ${CELL}px)`;
+  boardEl.style.gridTemplateRows    = `repeat(${H}, ${CELL}px)`;
+  for (const row of cellEls) for (const el of row) {
+    el.style.width = CELL + "px"; el.style.height = CELL + "px";
+  }
+  renderTray();
+}
+
+function buildBoard() {
+  boardEl.innerHTML = "";
+  cellEls = [];
+  for (let r = 0; r < H; r++) {
+    const row = [];
+    for (let c = 0; c < W; c++) {
+      const el = document.createElement("div");
+      el.className = "cell";
+      boardEl.appendChild(el);
+      row.push(el);
+    }
+    cellEls.push(row);
+  }
+}
+
+function renderGrid() {
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const el = cellEls[r][c], v = grid[r][c];
+    el.className = "cell" + (v ? " filled" : "");
+    el.style.backgroundColor = v || "";
+    el.style.color = v || "";   // 供发光效果的 currentColor 使用
+  }
+}
+
+/* =========================================================
+   4. 生成新方块
+   ========================================================= */
+function randomShape() {
+  const pool = SHAPES.filter(s => s.lv <= level);
+  // 等级越高越偏向抽到大方块，难度自然上升
+  const weighted = [];
+  for (const s of pool) {
+    const w = 1 + Math.max(0, level - s.lv) * 0.35 + (level >= 4 ? s.cells.length * 0.15 : 0);
+    for (let i = 0; i < Math.ceil(w * 2); i++) weighted.push(s);
+  }
+  const s = weighted[(Math.random() * weighted.length) | 0];
+  return { cells: s.cells, color: COLORS[(Math.random() * COLORS.length) | 0] };
+}
+
+function refillTray() {
+  tray = [randomShape(), randomShape(), randomShape()];
+  renderTray();
+}
+
+function shapeBounds(cells) {
+  let maxR = 0, maxC = 0;
+  for (const [r, c] of cells) { if (r > maxR) maxR = r; if (c > maxC) maxC = c; }
+  return { rows: maxR + 1, cols: maxC + 1 };
+}
+
+// 把一个方块画成 DOM 元素，size = 每格边长
+function makePieceEl(piece, size) {
+  const b = shapeBounds(piece.cells);
+  const el = document.createElement("div");
+  el.className = "piece";
+  el.style.gridTemplateColumns = `repeat(${b.cols}, ${size}px)`;
+  el.style.gridTemplateRows    = `repeat(${b.rows}, ${size}px)`;
+  const filled = new Set(piece.cells.map(([r, c]) => r + "," + c));
+  for (let r = 0; r < b.rows; r++) for (let c = 0; c < b.cols; c++) {
+    const d = document.createElement("div");
+    if (filled.has(r + "," + c)) { d.className = "blk"; d.style.background = piece.color; }
+    d.style.width = size + "px"; d.style.height = size + "px";
+    el.appendChild(d);
+  }
+  return el;
+}
+
+function renderTray() {
+  const slots = trayEl.querySelectorAll(".slot");
+  slots.forEach((slot, i) => {
+    slot.innerHTML = "";
+    const piece = tray[i];
+    if (!piece) return;
+    const el = makePieceEl(piece, Math.round(CELL * 0.62));
+    el.dataset.index = i;
+    slot.appendChild(el);
+  });
+}
+
+/* =========================================================
+   5. 判定与放置方块
+   ========================================================= */
+function canPlace(cells, row, col) {
+  for (const [dr, dc] of cells) {
+    const r = row + dr, c = col + dc;
+    if (r < 0 || r >= H || c < 0 || c >= W) return false;
+    if (grid[r][c]) return false;
+  }
+  return true;
+}
+
+function anyPlacement(piece) {
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++)
+    if (canPlace(piece.cells, r, c)) return true;
+  return false;
+}
+
+function place(piece, row, col) {
+  for (const [dr, dc] of piece.cells) grid[row + dr][col + dc] = piece.color;
+}
+
+// 返回所有已填满的行与列
+function findFullLines() {
+  const rows = [], cols = [];
+  for (let r = 0; r < H; r++) {
+    let full = true;
+    for (let c = 0; c < W; c++) if (!grid[r][c]) { full = false; break; }
+    if (full) rows.push(r);
+  }
+  for (let c = 0; c < W; c++) {
+    let full = true;
+    for (let r = 0; r < H; r++) if (!grid[r][c]) { full = false; break; }
+    if (full) cols.push(c);
+  }
+  return { rows, cols };
+}
+
+/* =========================================================
+   6. 一个回合的流程
+   ========================================================= */
+function commitMove(index, row, col) {
+  const piece = tray[index];
+  place(piece, row, col);
+  tray[index] = null;
+  renderGrid();
+  renderTray();
+  addScore(piece.cells.length);        // 每放下一格 +1 分
+  playPlace();
+
+  const { rows, cols } = findFullLines();
+  const lineCount = rows.length + cols.length;
+
+  if (lineCount > 0) {
+    busy = true;
+    combo++;
+    // 收集将要消失的格子
+    const targets = new Set();
+    for (const r of rows) for (let c = 0; c < W; c++) targets.add(r + "," + c);
+    for (const c of cols) for (let r = 0; r < H; r++) targets.add(r + "," + c);
+
+    // 发光 + 烟花 + 爆炸音效
+    for (const key of targets) {
+      const [r, c] = key.split(",").map(Number);
+      cellEls[r][c].classList.add("clearing");
+      const box = cellEls[r][c].getBoundingClientRect();
+      spawnFirework(box.left + box.width / 2, box.top + box.height / 2, grid[r][c]);
+    }
+    playExplosion(lineCount);
+
+    // 计分：一次消除多行则成倍加分，另有连击奖励
+    const gained = targets.size * 10 * lineCount + (combo > 1 ? combo * 25 : 0);
+    addScore(gained);
+    if (lineCount > 1 || combo > 1) showCombo(lineCount, combo);
+
+    setTimeout(() => {
+      for (const key of targets) {
+        const [r, c] = key.split(",").map(Number);
+        grid[r][c] = null;
+      }
+      renderGrid();
+      busy = false;
+      afterTurn();
+    }, 340);
+  } else {
+    combo = 0;
+    afterTurn();
+  }
+}
+
+function afterTurn() {
+  if (tray.every(p => !p)) refillTray();       // 三个方块用完后补发新的一批
+  // 没有任何方块放得下时判负
+  const alive = tray.some(p => p && anyPlacement(p));
+  if (!alive) gameOver();
+}
+
+function addScore(n) {
+  score += n;
+  document.getElementById("score").textContent = score;
+  const newLevel = Math.min(6, 1 + Math.floor(score / 700));   // 每 700 分升一级
+  if (newLevel > level) { level = newLevel; playLevelUp(); }
+  document.getElementById("level").textContent = level;
+  if (score > best) {
+    best = score;
+    document.getElementById("best").textContent = best;
+    try { localStorage.setItem("bp_best_zh", String(best)); } catch (e) {}
+  }
+}
+
+function showCombo(lines, c) {
+  const el = document.getElementById("combo");
+  el.textContent = c > 1 ? "连击 ×" + c + "！" : lines + " 行消除！";
+  el.classList.remove("show");
+  void el.offsetWidth;      // 强制浏览器重新播放动画
+  el.classList.add("show");
+}
+
+function gameOver() {
+  document.getElementById("finalScore").textContent = score;
+  document.getElementById("over").classList.add("show");
+}
+
+function reset() {
+  grid = Array.from({ length: H }, () => Array(W).fill(null));
+  score = 0; level = 1; combo = 0; busy = false;
+  document.getElementById("score").textContent = "0";
+  document.getElementById("level").textContent = "1";
+  document.getElementById("best").textContent = best;
+  document.getElementById("over").classList.remove("show");
+  renderGrid();
+  refillTray();
+}
+
+/* =========================================================
+   7. 拖放操作（鼠标与触屏共用 Pointer Events）
+   ========================================================= */
+let drag = null;   // { index, piece, ghost, offX, offY, srcEl }
+
+trayEl.addEventListener("pointerdown", e => {
+  if (busy) return;
+  const pieceEl = e.target.closest(".piece");
+  if (!pieceEl) return;
+  const index = +pieceEl.dataset.index;
+  const piece = tray[index];
+  if (!piece) return;
+
+  const rect = pieceEl.getBoundingClientRect();
+  const b = shapeBounds(piece.cells);
+  const fullW = b.cols * STEP - GAP, fullH = b.rows * STEP - GAP;
+  // 保持手指在方块上的相对位置，再放大到网格实际尺寸
+  const fx_ = (e.clientX - rect.left) / rect.width;
+  const fy_ = (e.clientY - rect.top) / rect.height;
+
+  const ghost = makePieceEl(piece, CELL);
+  ghost.id = "ghost";
+  ghost.style.gridTemplateColumns = `repeat(${b.cols}, ${CELL}px)`;
+  ghost.style.gridTemplateRows    = `repeat(${b.rows}, ${CELL}px)`;
+  document.body.appendChild(ghost);
+
+  drag = {
+    index, piece, ghost, srcEl: pieceEl,
+    offX: fx_ * fullW,
+    offY: fy_ * fullH + CELL * 1.3   // 把方块抬到手指上方，方便看清落点
+  };
+  pieceEl.classList.add("dragging");
+  trayEl.setPointerCapture(e.pointerId);
+  moveGhost(e.clientX, e.clientY);
+  e.preventDefault();
+});
+
+trayEl.addEventListener("pointermove", e => {
+  if (!drag) return;
+  moveGhost(e.clientX, e.clientY);
+  e.preventDefault();
+});
+
+trayEl.addEventListener("pointerup", e => endDrag(e));
+trayEl.addEventListener("pointercancel", () => endDrag(null));
+
+function ghostAnchor() {
+  // 找出被拖方块左上角所对应的网格坐标
+  const origin = cellEls[0][0].getBoundingClientRect();
+  const gx = parseFloat(drag.ghost.style.left);
+  const gy = parseFloat(drag.ghost.style.top);
+  return {
+    row: Math.round((gy - origin.top) / STEP),
+    col: Math.round((gx - origin.left) / STEP)
+  };
+}
+
+function moveGhost(x, y) {
+  drag.ghost.style.left = (x - drag.offX) + "px";
+  drag.ghost.style.top  = (y - drag.offY) + "px";
+  showPreview();
+}
+
+function clearPreview() {
+  for (const row of cellEls) for (const el of row) el.classList.remove("preview", "invalid");
+}
+
+function showPreview() {
+  clearPreview();
+  const { row, col } = ghostAnchor();
+  const ok = canPlace(drag.piece.cells, row, col);
+  for (const [dr, dc] of drag.piece.cells) {
+    const r = row + dr, c = col + dc;
+    if (r >= 0 && r < H && c >= 0 && c < W)
+      cellEls[r][c].classList.add(ok ? "preview" : "invalid");
+  }
+}
+
+function endDrag(e) {
+  if (!drag) return;
+  const { row, col } = ghostAnchor();
+  const ok = canPlace(drag.piece.cells, row, col);
+  drag.ghost.remove();
+  drag.srcEl.classList.remove("dragging");
+  clearPreview();
+  const index = drag.index;
+  drag = null;
+  if (ok) commitMove(index, row, col);
+}
+
+/* =========================================================
+   8. 烟花（绘制在覆盖全屏的 canvas 上）
+   ========================================================= */
+let particles = [];
+let rafId = null;
+
+function resizeFx() {
+  const dpr = window.devicePixelRatio || 1;
+  fx.width = innerWidth * dpr; fx.height = innerHeight * dpr;
+  fx.style.width = innerWidth + "px"; fx.style.height = innerHeight + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function spawnFirework(x, y, color) {
+  const n = 14;
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = 1.6 + Math.random() * 4.2;
+    particles.push({
+      x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.2,
+      life: 1, decay: 0.014 + Math.random() * 0.02,
+      size: 1.6 + Math.random() * 3, color: color || "#ffd166"
+    });
+  }
+  if (!rafId) rafId = requestAnimationFrame(tickFx);
+}
+
+function tickFx() {
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  ctx.globalCompositeOperation = "lighter";
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.16;              // 重力
+    p.vx *= 0.985; p.vy *= 0.985;
+    p.life -= p.decay;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+  if (particles.length) { rafId = requestAnimationFrame(tickFx); }
+  else { rafId = null; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+
+/* =========================================================
+   9. 音效（用 Web Audio 实时合成，无需外部音频文件）
+   ========================================================= */
+let audio = null;
+function ac() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audio = new AC();
+  }
+  if (audio && audio.state === "suspended") audio.resume();
+  return audio;
+}
+document.addEventListener("pointerdown", () => ac(), { once: true });
+
+// 爆炸声：白噪声经低通滤波，音量迅速衰减
+function playExplosion(lines) {
+  const a = ac(); if (!a) return;
+  const dur = 0.5 + lines * 0.08;
+  const buf = a.createBuffer(1, a.sampleRate * dur, a.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / data.length;
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.2);
+  }
+  const src = a.createBufferSource(); src.buffer = buf;
+  const flt = a.createBiquadFilter(); flt.type = "lowpass";
+  flt.frequency.setValueAtTime(2600 + lines * 500, a.currentTime);
+  flt.frequency.exponentialRampToValueAtTime(180, a.currentTime + dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.34, a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + dur);
+  src.connect(flt).connect(g).connect(a.destination);
+  src.start();
+
+  // 再叠一层低频闷响，听感更过瘾
+  const o = a.createOscillator(), og = a.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(150, a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(42, a.currentTime + 0.3);
+  og.gain.setValueAtTime(0.4, a.currentTime);
+  og.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.35);
+  o.connect(og).connect(a.destination);
+  o.start(); o.stop(a.currentTime + 0.36);
+}
+
+function playPlace() {
+  const a = ac(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = "triangle";
+  o.frequency.setValueAtTime(420, a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(240, a.currentTime + 0.09);
+  g.gain.setValueAtTime(0.14, a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.1);
+  o.connect(g).connect(a.destination);
+  o.start(); o.stop(a.currentTime + 0.11);
+}
+
+function playLevelUp() {
+  const a = ac(); if (!a) return;
+  [523, 659, 784, 1047].forEach((f, i) => {
+    const o = a.createOscillator(), g = a.createGain();
+    const t = a.currentTime + i * 0.085;
+    o.type = "square";
+    o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0.001, t);
+    g.gain.exponentialRampToValueAtTime(0.11, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + 0.17);
+  });
+}
+
+/* =========================================================
+   10. 启动
+   ========================================================= */
+document.getElementById("again").addEventListener("click", reset);
+window.addEventListener("resize", () => { resizeFx(); sizeToScreen(); });
+
+buildBoard();
+resizeFx();
+reset();
+sizeToScreen();
+</script>
+</body>
+</html>

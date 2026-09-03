@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方块拼图设计文档</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#F4F6FB; --surface:#FFFFFF; --surface2:#E9ECF5;
+  --ink:#151A28; --ink2:#49516A; --ink3:#7C849C;
+  --line:#DCE0EC; --line2:#C6CCDE;
+  --accent:#A96C0B; --accent-bg:#FBF1DC;
+  --ok:#1C8A55; --bad:#C13A33;
+  --shadow:0 1px 2px rgba(21,26,40,.06), 0 8px 24px rgba(21,26,40,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1020; --surface:#151B2C; --surface2:#1D2437;
+    --ink:#ECEFF8; --ink2:#A6AEC6; --ink3:#6E7793;
+    --line:#262E46; --line2:#333D59;
+    --accent:#FFC65C; --accent-bg:#2B2413;
+    --ok:#4FD08A; --bad:#FF7E76;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1020; --surface:#151B2C; --surface2:#1D2437;
+  --ink:#ECEFF8; --ink2:#A6AEC6; --ink3:#6E7793;
+  --line:#262E46; --line2:#333D59;
+  --accent:#FFC65C; --accent-bg:#2B2413;
+  --ok:#4FD08A; --bad:#FF7E76;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC", system-ui, sans-serif;
+  font-size:16px; line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:0 24px 96px}
+.col{max-width:660px}
+
+/* ---------- 文字 ---------- */
+h1,h2,h3{font-family:"Archivo", system-ui, sans-serif; text-wrap:balance; margin:0}
+h1{font-variation-settings:"wdth" 118,"wght" 800; font-size:clamp(38px,6.2vw,62px); line-height:1.08; letter-spacing:-.01em}
+h2{font-variation-settings:"wdth" 112,"wght" 700; font-size:clamp(23px,3vw,30px); line-height:1.25; letter-spacing:0}
+h3{font-variation-settings:"wdth" 100,"wght" 700; font-size:17px; line-height:1.4}
+p{margin:0}
+.eyebrow{
+  font-family:"JetBrains Mono", monospace; font-size:11px; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+}
+.lede{font-size:19px; line-height:1.7; color:var(--ink2)}
+.mono{font-family:"JetBrains Mono", monospace; font-size:13.5px}
+strong{font-weight:600; color:var(--ink)}
+code{
+  font-family:"JetBrains Mono", monospace; font-size:.87em;
+  background:var(--surface2); padding:.12em .4em; border-radius:4px; color:var(--ink)
+}
+
+/* ---------- 框架 ---------- */
+header{padding:76px 0 8px}
+header .col{display:flex; flex-direction:column; gap:20px}
+.meta{
+  display:flex; flex-wrap:wrap; gap:8px 10px; font-family:"JetBrains Mono",monospace;
+  font-size:11.5px; color:var(--ink3); padding-top:4px;
+}
+.meta span{border:1px solid var(--line); border-radius:100px; padding:3px 11px}
+
+section{padding-top:60px}
+.head{display:flex; flex-direction:column; gap:10px; margin-bottom:26px}
+.stack{display:flex; flex-direction:column; gap:16px}
+.rule{height:1px; background:var(--line); border:0; margin:0}
+
+/* ---------- 卡片条 ---------- */
+.strip{
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:14px; padding:26px; box-shadow:var(--shadow); margin-top:26px;
+}
+.strip-title{
+  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink3); margin-bottom:18px;
+}
+.scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+
+/* ---------- 规则列表 ---------- */
+.rules{display:flex; flex-direction:column; gap:2px; counter-reset:r}
+.rules li{
+  list-style:none; display:grid; grid-template-columns:34px 1fr; gap:14px;
+  padding:13px 0; border-bottom:1px solid var(--line); align-items:baseline;
+}
+.rules li:last-child{border-bottom:0}
+.rules li::before{
+  counter-increment:r; content:"R" counter(r);
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:700;
+  color:var(--accent); letter-spacing:.04em;
+}
+.rules ul{margin:0; padding:0}
+.no{color:var(--bad); font-weight:600}
+.yes{color:var(--ok); font-weight:600}
+
+/* ---------- 表格 ---------- */
+table{border-collapse:collapse; width:100%; font-size:14.5px}
+th,td{text-align:left; padding:10px 14px 10px 0; border-bottom:1px solid var(--line); vertical-align:top}
+th{
+  font-family:"JetBrains Mono",monospace; font-size:10.5px; font-weight:700;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--ink3); padding-bottom:8px;
+}
+td.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* ---------- 方块集 ---------- */
+.shapes{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:14px}
+.shape{
+  background:var(--surface2); border-radius:10px; padding:14px 10px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.shape .nm{font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--ink3); letter-spacing:.04em}
+.lvtag{
+  display:inline-block; font-family:"JetBrains Mono",monospace; font-size:10.5px; font-weight:700;
+  color:var(--accent); background:var(--accent-bg); border-radius:5px; padding:2px 8px; letter-spacing:.05em;
+}
+.lvrow{display:flex; align-items:center; gap:12px; margin:26px 0 14px}
+.lvrow .ln{flex:1; height:1px; background:var(--line)}
+
+/* ---------- 方块颜色 ---------- */
+.sw{display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:12px}
+.sw div{border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:44px}
+.sw b{font-family:"JetBrains Mono",monospace; font-size:11px; color:#10131c; font-weight:700}
+.sw i{font-style:normal; font-family:"JetBrains Mono",monospace; font-size:11px; color:#10131c; opacity:.72}
+
+/* ---------- 格子状态 ---------- */
+.states{display:grid; grid-template-columns:repeat(auto-fit,minmax(126px,1fr)); gap:16px}
+.state{display:flex; flex-direction:column; gap:9px; align-items:flex-start}
+.state .cap{font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink3)}
+.state .dsc{font-size:13px; color:var(--ink2); line-height:1.55}
+.demo-cell{width:52px; height:52px; border-radius:10px}
+.c-empty{background:var(--surface2); box-shadow:inset 0 0 0 1px var(--line2)}
+.c-fill{background:#5C9DFF; box-shadow:inset 0 -4px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.28)}
+.c-prev{background:var(--surface2); box-shadow:inset 0 0 0 2px var(--ink3)}
+.c-bad{background:rgba(193,58,51,.28); box-shadow:inset 0 0 0 2px var(--bad)}
+.c-clear{background:#FFF3CE; box-shadow:0 0 22px 7px rgba(255,209,102,.75), inset 0 0 0 1px #FFD166}
+
+/* ---------- 技术参数 ---------- */
+.spec{display:grid; grid-template-columns:auto 1fr; gap:9px 20px; font-size:14px; align-items:baseline}
+.spec dt{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink3); letter-spacing:.05em; text-transform:uppercase; white-space:nowrap}
+.spec dd{margin:0; color:var(--ink2)}
+.spec dd b{color:var(--ink)}
+
+/* ---------- 特效时间线 ---------- */
+.tl{display:flex; flex-direction:column; gap:0; min-width:520px}
+.tl-row{display:grid; grid-template-columns:78px 1fr; gap:16px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line)}
+.tl-row:last-child{border-bottom:0}
+.tl-ms{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--accent); font-variant-numeric:tabular-nums; font-weight:700}
+.tl-bar{height:9px; border-radius:5px; background:var(--accent); opacity:.85}
+.tl-txt{font-size:13.5px; color:var(--ink2); margin-top:5px}
+
+/* ---------- 提示框 ---------- */
+.note{
+  border-left:3px solid var(--accent); background:var(--accent-bg);
+  padding:14px 18px; border-radius:0 10px 10px 0; font-size:14.5px; color:var(--ink2);
+}
+.note b{color:var(--ink)}
+
+/* ---------- 清单 ---------- */
+.chk{display:flex; flex-direction:column; gap:0}
+.chk li{
+  list-style:none; display:grid; grid-template-columns:22px 1fr auto; gap:14px;
+  padding:12px 0; border-bottom:1px solid var(--line); align-items:baseline; font-size:15px;
+}
+.chk li:last-child{border-bottom:0}
+.chk .box{
+  width:15px; height:15px; border:1.5px solid var(--line2); border-radius:4px;
+  display:block; transform:translateY(2px);
+}
+.chk .done .box{background:var(--ok); border-color:var(--ok)}
+.chk .tag{font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--ink3); white-space:nowrap}
+.chk .done span:nth-child(2){color:var(--ink3); text-decoration:line-through}
+
+svg{display:block; max-width:100%; height:auto}
+footer{margin-top:70px; padding-top:24px; border-top:1px solid var(--line); font-size:13.5px; color:var(--ink3)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <div class="col">
+    <p class="eyebrow">设计文档 · 方块拼图游戏</p>
+    <h1>方块拼图</h1>
+    <p class="lede">一份方块拼图（Block Puzzle）游戏的完整流程、规则与美术模型 —— 细节详尽到可以直接用 Unity 复刻，不用再猜任何数值。</p>
+    <div class="meta">
+      <span>8 × 8 网格</span><span>每轮 3 个方块</span><span>方块不能旋转</span><span>9:16 竖屏</span><span>单人游玩，无时间限制</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1. 游戏循环 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">01 · 流程模型</p>
+    <h2>游戏循环</h2>
+    <p>这是其他一切内容依附的框架。一<strong>轮</strong>从玩家触碰方块开始，到消除特效播放完毕结束。系统只在<strong>一个</strong>时刻检查是否失败：这一轮结束之后。</p>
+  </div>
+
+  <div class="strip scroll">
+    <p class="strip-title">单轮游戏流程图</p>
+    <svg viewBox="0 0 960 400" width="960" role="img" aria-label="方块拼图游戏循环流程图">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink3)"/>
+        </marker>
+      </defs>
+      <g font-family="Noto Sans SC, sans-serif" font-size="13">
+
+        <!-- 发放方块 -->
+        <rect x="14" y="150" width="130" height="56" rx="10" fill="var(--surface2)" stroke="var(--line2)"/>
+        <text x="79" y="173" text-anchor="middle" fill="var(--ink)" font-weight="600">发放 3 个方块</text>
+        <text x="79" y="190" text-anchor="middle" fill="var(--ink3)" font-size="11.5">按当前等级</text>
+
+        <!-- 拖拽 -->
+        <rect x="180" y="150" width="130" height="56" rx="10" fill="var(--surface2)" stroke="var(--line2)"/>
+        <text x="245" y="173" text-anchor="middle" fill="var(--ink)" font-weight="600">玩家拖动</text>
+        <text x="245" y="190" text-anchor="middle" fill="var(--ink3)" font-size="11.5">影子跟随手指</text>
+
+        <!-- 是否合法 -->
+        <path d="M 411 138 L 484 178 L 411 218 L 338 178 Z" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="411" y="175" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="12.5">能放下吗？</text>
+        <text x="411" y="191" text-anchor="middle" fill="var(--ink3)" font-size="11">在网格内 &amp; 格子为空</text>
+
+        <!-- 写入网格 -->
+        <rect x="520" y="150" width="128" height="56" rx="10" fill="var(--surface2)" stroke="var(--line2)"/>
+        <text x="584" y="173" text-anchor="middle" fill="var(--ink)" font-weight="600">写入网格</text>
+        <text x="584" y="190" text-anchor="middle" fill="var(--ink3)" font-size="11.5">每格 +1 分</text>
+
+        <!-- 是否满行 -->
+        <path d="M 758 138 L 831 178 L 758 218 L 685 178 Z" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="758" y="175" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="12.5">有满行/列吗？</text>
+        <text x="758" y="191" text-anchor="middle" fill="var(--ink3)" font-size="11">扫描 8 行 + 8 列</text>
+
+        <!-- 消除 + 特效 -->
+        <rect x="690" y="36" width="136" height="62" rx="10" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="758" y="58" text-anchor="middle" fill="var(--ink)" font-weight="600">消除 + 烟花</text>
+        <text x="758" y="75" text-anchor="middle" fill="var(--ink3)" font-size="11.5">爆炸音效，加分</text>
+        <text x="758" y="90" text-anchor="middle" fill="var(--ink3)" font-size="11.5">连击 +1</text>
+
+        <!-- 是否还有解 -->
+        <path d="M 411 288 L 484 324 L 411 360 L 338 324 Z" fill="var(--accent-bg)" stroke="var(--accent)"/>
+        <text x="411" y="322" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="12.5">还能放吗？</text>
+        <text x="411" y="338" text-anchor="middle" fill="var(--ink3)" font-size="11">是否有方块能放下</text>
+
+        <!-- 失败 -->
+        <rect x="60" y="296" width="118" height="56" rx="10" fill="var(--surface)" stroke="var(--bad)"/>
+        <text x="119" y="319" text-anchor="middle" fill="var(--bad)" font-weight="600">游戏结束</text>
+        <text x="119" y="336" text-anchor="middle" fill="var(--ink3)" font-size="11.5">显示分数，可重玩</text>
+
+        <!-- 箭头 -->
+        <g stroke="var(--ink3)" stroke-width="1.4" fill="none" marker-end="url(#ar)">
+          <path d="M 144 178 L 174 178"/>
+          <path d="M 310 178 L 332 178"/>
+          <path d="M 484 178 L 514 178"/>
+          <path d="M 648 178 L 679 178"/>
+          <path d="M 758 138 L 758 104"/>
+          <path d="M 826 67 C 890 67 906 178 906 300 L 906 324 L 490 324"/>
+          <path d="M 758 218 L 758 250 L 411 250 L 411 284"/>
+          <path d="M 338 324 L 184 324"/>
+          <path d="M 411 360 L 411 382 L 79 382 L 79 212"/>
+          <path d="M 411 218 C 411 254 245 244 245 212"/>
+        </g>
+
+        <!-- 分支标签 -->
+        <g font-size="11" font-family="JetBrains Mono, monospace" font-weight="700">
+          <text x="493" y="171" fill="var(--ok)">是</text>
+          <text x="330" y="252" fill="var(--bad)" text-anchor="end">否 · 方块退回托盘</text>
+          <text x="768" y="122" fill="var(--ok)">是</text>
+          <text x="768" y="242" fill="var(--ink3)">否</text>
+          <text x="262" y="316" fill="var(--bad)" text-anchor="end">否</text>
+          <text x="424" y="378" fill="var(--ok)">是 · 三个用完就补发</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="col" style="margin-top:22px">
+    <div class="note"><b>最容易做错的地方：</b>只应在消除特效播放完、托盘已重新补满<b>之后</b>检查是否失败。检查得太早会误判失败，因为即将被消除的行此刻仍占据着网格。</div>
+  </div>
+</section>
+
+<!-- ============ 2. 游戏规则 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">02 · 规则</p>
+    <h2>游戏规则</h2>
+    <p>下面十条就是全部规则。前三条是这个游戏区别于俄罗斯方块（Tetris）的地方，也是新手最容易搞错的三点。</p>
+  </div>
+
+  <div class="col">
+    <ol class="rules">
+      <li><span><strong>方块不会下落。</strong>放在哪就停在哪。没有重力，没有碰撞，没有"落到底部"。网格是一个静态数组。</span></li>
+      <li><span><strong>方块不能旋转。</strong>发出来是什么形状就必须用什么形状。这是刻意的设计决定：它把游戏从考验手速变成考验空间排布，并且顺带在触屏上省掉了旋转按钮。</span></li>
+      <li><span><strong>没有计时器。</strong>玩家想想多久都可以。压力来自可用空间不断变少，而不是来自时间。</span></li>
+      <li><span><strong>每轮恰好发放 3 个方块。</strong>三个都用完才会补发新的一批。不能跳过方块，也不能更换方块。</span></li>
+      <li><span><strong>放置合法当且仅当</strong>方块的每一格都落在网格内 <span class="yes">并且</span> 每一格当前都为空。只要有一格违规，整个方块就会被<span class="no">拒绝</span>并退回托盘。</span></li>
+      <li><span><strong>当一整行或一整列的 8 格都被填满时消除。</strong>每次放置之后都要扫描全部 8 行和 8 列。</span></li>
+      <li><span><strong>同时消除。</strong>如果一次放置同时填满多行/列，它们会在同一帧全部消失，并合并计为一次得分。行列交叉处的格子只计一次。</span></li>
+      <li><span><strong>连击（Combo）</strong>在每一轮只要发生消除就 +1，一旦有一轮放置方块却没有消除任何行列，连击立刻<span class="no">重置为 0</span>。</span></li>
+      <li><span><strong>等级随分数提升，永不下降。</strong>更高的等级会解锁更大、更棘手的方块，这就是难度提升的全部机制。</span></li>
+      <li><span><strong>当托盘里的方块没有一个能放进网格任何位置时，游戏失败。</strong>系统必须真的去遍历 64 个位置 × 剩余方块数来确认——不能猜测，不能估算。</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 3. 操作方式 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">03 · 体验</p>
+    <h2>玩法与操作</h2>
+    <p>整个游戏只有一个动作：拖拽放置。游戏体验的好坏几乎全部取决于这一个动作是否"手感顺"。</p>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">一次拖拽的四个阶段</p>
+    <div class="scroll">
+      <table style="min-width:560px">
+        <thead><tr><th style="width:76px">阶段</th><th style="width:150px">玩家操作</th><th>系统的即时反馈</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td><strong>触碰</strong>托盘中的方块</td><td>托盘里的方块变暗至 25%。一份<strong>放大到与网格格子等尺寸</strong>的副本出现并跟随手指。</td></tr>
+          <tr><td class="num">2</td><td><strong>抬起</strong>手指</td><td>副本被抬高到触点上方 <code>1.3</code> 格。这是手机端必须有的细节：否则手指会挡住方块，玩家看不到自己到底放在哪。</td></tr>
+          <tr><td class="num">3</td><td>在网格上<strong>拖动</strong></td><td>目标格子若可放置则亮白，不可放置则亮红。玩家在<em>松手之前</em>就知道结果——永远不用试错后悔。</td></tr>
+          <tr><td class="num">4</td><td><strong>松手</strong></td><td>合法：方块吸附到网格，发出"哒"的声音，加分。不合法：方块消失，托盘里的方块恢复原样。<strong>不扣分，不报错。</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col" style="margin-top:22px">
+    <div class="note"><b>吸附网格规则：</b>目标格子以<b>方块的左上角</b>为基准计算，而不是手指的位置。公式：<code>列 = round((方块.x − 网格.x) / 步长)</code>，其中 <code>步长 = 格边长 + 间隙</code>。用 <code>round</code> 而不是 <code>floor</code>——这样方块会自动吸向最近的格子，玩家不需要精确瞄准。</div>
+  </div>
+</section>
+
+<!-- ============ 4. 得分与等级 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">04 · 数值平衡</p>
+    <h2>得分与等级</h2>
+    <p>公式对同时消除多行给出丰厚奖励。目的是鼓励玩家忍住、堆叠、再一次性吃大分，而不是一行一行零碎地消除。</p>
+  </div>
+
+  <div class="strip scroll">
+    <p class="strip-title">得分公式</p>
+    <table style="min-width:600px">
+      <thead><tr><th style="width:150px">行为</th><th style="width:250px">公式</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td><strong>放置方块</strong></td><td class="num">+ 1 × 方块格数</td><td>2×2 方块 → <strong>+4</strong></td></tr>
+        <tr><td><strong>消除单行/列</strong></td><td class="num">+ 消除格数 × 10 × 行数</td><td>1 行 → 8×10×1 = <strong>+80</strong></td></tr>
+        <tr><td><strong>同时消除多行/列</strong></td><td class="num">同公式，按行数平方倍增</td><td>2 行 → 15×10×2 = <strong>+300</strong></td></tr>
+        <tr><td><strong>连击奖励</strong></td><td class="num">+ 25 × 连击数 &nbsp;<span style="color:var(--ink3)">（从连击 2 起算）</span></td><td>连击 4 → <strong>+100</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="strip scroll">
+    <p class="strip-title">等级表 · <code>等级 = 1 + floor(分数 / 700)</code>，上限 6</p>
+    <table style="min-width:620px">
+      <thead><tr><th style="width:74px">等级</th><th style="width:110px">分数门槛</th><th style="width:210px">解锁的新方块</th><th>玩家感受</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="num">0</td><td>1 格、2–3 长条、2×2 方块</td><td>轻松上手，学习玩法</td></tr>
+        <tr><td class="num">2</td><td class="num">700</td><td>小 L 形、4 长条</td><td>开始需要思考</td></tr>
+        <tr><td class="num">3</td><td class="num">1 400</td><td>长 L 形、S / Z 形</td><td>S 形是最讨厌的方块</td></tr>
+        <tr><td class="num">4</td><td class="num">2 100</td><td>T 形、5 长条</td><td>5 长条需要提前留出空间</td></tr>
+        <tr><td class="num">5</td><td class="num">2 800</td><td>十字形、2×3 矩形</td><td>网格开始变挤</td></tr>
+        <tr><td class="num">6</td><td class="num">3 500</td><td>3×3 方块</td><td>一次占九格——非常紧张</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col" style="margin-top:22px">
+    <div class="note"><b>隐性的难度提升方式：</b>等级越高不只是解锁新方块，还会<b>提高抽到大方块的概率</b>。每个形状的权重为 <code>1 + (当前等级 − 解锁等级) × 0.35</code>，从等级 4 起再额外加上 <code>格数 × 0.15</code>。小方块依然会出现——如果彻底屏蔽小方块，玩家会因为运气差而冤枉地输掉，而不是因为下得不好。</div>
+  </div>
+</section>
+
+<!-- ============ 5. 方块集 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">05 · 内容</p>
+    <h2>方块集合 — 26 种形状</h2>
+    <p>每个形状只是一份从左上角起算的坐标列表 <code>[行, 列]</code>。因为不能旋转，L 形的每一个朝向都要单独声明成一个形状。</p>
+  </div>
+
+  <div class="strip">
+    <div class="lvrow"><span class="lvtag">等级 1</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">6 种基础形状</span></div>
+    <div class="shapes" id="s1"></div>
+    <div class="lvrow"><span class="lvtag">等级 2</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">小 L 形 4 个方向 + 4 长条</span></div>
+    <div class="shapes" id="s2"></div>
+    <div class="lvrow"><span class="lvtag">等级 3</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">长 L 形 + S / Z 形</span></div>
+    <div class="shapes" id="s3"></div>
+    <div class="lvrow"><span class="lvtag">等级 4–6</span><span class="ln"></span><span class="mono" style="color:var(--ink3)">T 形、5 长条、十字、矩形、3×3</span></div>
+    <div class="shapes" id="s4"></div>
+  </div>
+</section>
+
+<!-- ============ 6. 美术 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">06 · 美术模型</p>
+    <h2>美术与特效</h2>
+    <p>这个游戏不需要任何图片素材。所有画面都由圆角矩形、内阴影和粒子效果搭建而成——也就是说不会画画也能全部做出来。</p>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">9:16 竖屏布局</p>
+    <div class="scroll">
+      <svg viewBox="0 0 700 330" width="700" role="img" aria-label="竖屏布局示意图">
+        <g font-family="Noto Sans SC, sans-serif" font-size="12.5">
+          <rect x="248" y="10" width="204" height="310" rx="20" fill="var(--surface2)" stroke="var(--line2)"/>
+          <rect x="258" y="26" width="184" height="38" rx="8" fill="var(--surface)" stroke="var(--line2)"/>
+          <text x="350" y="50" text-anchor="middle" fill="var(--ink)" font-weight="600">分数 · 等级 · 最高分</text>
+          <rect x="258" y="74" width="184" height="184" rx="10" fill="var(--surface)" stroke="var(--accent)"/>
+          <text x="350" y="162" text-anchor="middle" fill="var(--ink)" font-weight="600">8 × 8 网格</text>
+          <text x="350" y="180" text-anchor="middle" fill="var(--ink3)" font-size="11">始终保持正方形</text>
+          <rect x="258" y="268" width="184" height="42" rx="8" fill="var(--surface)" stroke="var(--line2)"/>
+          <text x="350" y="294" text-anchor="middle" fill="var(--ink)" font-weight="600">3 格方块托盘</text>
+
+          <g stroke="var(--ink3)" stroke-width="1.2" font-family="JetBrains Mono, monospace" font-size="11">
+            <path d="M 232 26 L 232 64" marker-start="url(#ar)" marker-end="url(#ar)"/>
+            <text x="222" y="49" text-anchor="end" fill="var(--ink2)">12%</text>
+            <path d="M 232 74 L 232 258" marker-start="url(#ar)" marker-end="url(#ar)"/>
+            <text x="222" y="170" text-anchor="end" fill="var(--ink2)">58%</text>
+            <path d="M 232 268 L 232 310" marker-start="url(#ar)" marker-end="url(#ar)"/>
+            <text x="222" y="293" text-anchor="end" fill="var(--ink2)">22%</text>
+          </g>
+
+          <g font-size="12" fill="var(--ink2)">
+            <text x="480" y="44">数值栏始终在最上方——手指</text>
+            <text x="480" y="61">永远不会挡住分数。</text>
+            <text x="480" y="152">网格居中。格子边长按下面</text>
+            <text x="480" y="169">的公式计算，限制在</text>
+            <text x="480" y="186">24–44 px 以适配各种设备。</text>
+            <text x="480" y="290">托盘放在最下方，方便单手</text>
+            <text x="480" y="307">持机时用拇指操作。</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <dl class="spec" style="margin-top:22px">
+      <dt>格边长</dt><dd><b>边长 = (min(宽, 可用高) − 间隙×7 − 内边距) / 8</b>，限制在 24–44 px</dd>
+      <dt>间隙</dt><dd><b>固定 4 px</b>，不随屏幕缩放</dd>
+      <dt>格子圆角</dt><dd><b>约为格边长的 18%</b>（38 px 的格子 → 7 px 圆角）。这个比例能让方块在各种尺寸下都显得"柔和"</dd>
+      <dt>托盘中的方块</dt><dd>以<b>网格格子边长的 62%</b> 绘制——足够小以容纳 3 个方块，又足够大以能看清形状</dd>
+    </dl>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">格子的五种状态</p>
+    <div class="states">
+      <div class="state"><div class="demo-cell c-empty"></div><span class="cap">空</span><span class="dsc">5.5% 透明度的白色底，内描边 1 px。</span></div>
+      <div class="state"><div class="demo-cell c-fill"></div><span class="cap">已占用</span><span class="dsc">实色 + 上方 3 px 高光、下方 4 px 阴影 → 制造立体浮起的效果。</span></div>
+      <div class="state"><div class="demo-cell c-prev"></div><span class="cap">预览</span><span class="dsc">方块悬停在上方且可放置时，亮白 30%。</span></div>
+      <div class="state"><div class="demo-cell c-bad"></div><span class="cap">不可放置</span><span class="dsc">30% 红色。在松手<em>之前</em>就给出警告，而不是之后。</span></div>
+      <div class="state"><div class="demo-cell c-clear"></div><span class="cap">消除中</span><span class="dsc">放大 1.32 倍，亮度 ×3.2，同色 26 px 光晕。</span></div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">方块调色板 · 8 种颜色，随机抽取</p>
+    <div class="sw">
+      <div style="background:#FF6B6B"><b>珊瑚红</b><i>#FF6B6B</i></div>
+      <div style="background:#FFA94D"><b>橙色</b><i>#FFA94D</i></div>
+      <div style="background:#FFD43B"><b>黄色</b><i>#FFD43B</i></div>
+      <div style="background:#69DB7C"><b>绿色</b><i>#69DB7C</i></div>
+      <div style="background:#4DD4E8"><b>青色</b><i>#4DD4E8</i></div>
+      <div style="background:#5C9DFF"><b>蓝色</b><i>#5C9DFF</i></div>
+      <div style="background:#B197FC"><b>紫色</b><i>#B197FC</i></div>
+      <div style="background:#F783AC"><b>粉色</b><i>#F783AC</i></div>
+    </div>
+    <p style="margin-top:16px; font-size:14px; color:var(--ink2)">这八种颜色明度和饱和度一致，所以在网格上相邻时不会有哪个颜色显得比另一个"重"。颜色在规则上<strong>没有任何含义</strong>——它纯粹是为了让眼睛能分辨出这块和那块的不同。背景必须是中性深色（<code>#0B1020</code>），这样八种颜色才都能凸显出来。</p>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">消除特效时间线 · 总计 340 ms</p>
+    <div class="scroll">
+      <div class="tl">
+        <div class="tl-row"><span class="tl-ms">0 ms</span><div><div class="tl-bar" style="width:8%"></div><div class="tl-txt">播放爆炸音效。为每一个被消除的格子生成 <strong>14 个烟花粒子</strong>，从格子中心向四周飞散。</div></div></div>
+        <div class="tl-row"><span class="tl-ms">0–120 ms</span><div><div class="tl-bar" style="width:35%"></div><div class="tl-txt">格子放大到 <strong>1.32 倍</strong>，亮度提升到 <strong>3.2 倍</strong>，光晕扩散 26 px。这是最"爽"的一瞬间——不要把它做得更快。</div></div></div>
+        <div class="tl-row"><span class="tl-ms">120–340 ms</span><div><div class="tl-bar" style="width:65%"></div><div class="tl-txt">格子在亮度继续上升的同时收缩到 <strong>0</strong>——看起来像被吸进一个光点然后熄灭。</div></div></div>
+        <div class="tl-row"><span class="tl-ms">340 ms</span><div><div class="tl-bar" style="width:8%"></div><div class="tl-txt">清空数组中的格子数据，重绘网格，<strong>解锁操作</strong>，然后才检查是否失败。</div></div></div>
+        <div class="tl-row"><span class="tl-ms">~900 ms</span><div><div class="tl-bar" style="width:20%; opacity:.4"></div><div class="tl-txt">最后的烟花粒子熄灭。粒子的存活时间比格子长——这是刻意的，让余韵在网格清空之后还能持续一会儿。</div></div></div>
+      </div>
+    </div>
+    <dl class="spec" style="margin-top:24px">
+      <dt>粒子数量</dt><dd><b>每格 14 个</b>。消除 1 行 = 112 个粒子。同时消除 3 行仍不到 400 个粒子——低端手机也能流畅运行。</dd>
+      <dt>速度</dt><dd>方向随机 360°，速度 <b>1.6 – 5.8 px/帧</b>，再叠加一个 <b>−1.2</b> 的向上冲力，让粒子先冲高再下落</dd>
+      <dt>重力</dt><dd><b>+0.16 px/帧²</b>——足以看出抛物线，但不会重到让粒子直直坠落</dd>
+      <dt>摩擦力</dt><dd><b>每帧 ×0.985</b>，粒子逐渐减速而不是匀速飞行</dd>
+      <dt>衰减</dt><dd>生命值每帧减少 <b>0.014 – 0.034</b>；粒子半径 = <code>size × life</code>，所以粒子会边变淡边变小</dd>
+      <dt>混合模式</dt><dd><b>加色混合</b>（<code>lighter</code> / Additive）。粒子密集重叠的地方会自然过曝发白——这正是让它看起来像真烟花的关键</dd>
+      <dt>粒子颜色</dt><dd>取刚被消除格子的原色，所以爆炸的颜色就是刚消失之物的颜色</dd>
+    </dl>
+  </div>
+
+  <div class="strip">
+    <p class="strip-title">音效 · 三种声音，实时合成，无需音频文件</p>
+    <div class="scroll">
+      <table style="min-width:620px">
+        <thead><tr><th style="width:130px">声音</th><th style="width:96px">时长</th><th>构成</th></tr></thead>
+        <tbody>
+          <tr><td><strong>放置方块</strong></td><td class="num">100 ms</td><td>三角波从 <code>420 → 240 Hz</code> 滑音。短促干脆——一局要听上百次，绝对不能刺耳。</td></tr>
+          <tr><td><strong>爆炸</strong></td><td class="num">500 ms +</td><td>两层叠加：<strong>(1)</strong> 白噪声经低通滤波从 <code>2600 → 180 Hz</code> 扫过，产生"嗖"的声音；<strong>(2)</strong> 低频正弦波 <code>150 → 42 Hz</code>，产生胸腔感的"咚"。消除的行越多，声音越长、越明亮。</td></tr>
+          <tr><td><strong>升级</strong></td><td class="num">340 ms</td><td>四个方波音符 <code>C-E-G-C</code>（523·659·784·1047 Hz），间隔 85 ms。8-bit 音色，让人联想到老式游戏机。</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note" style="margin-top:20px"><b>手机端必须注意：</b>浏览器和 iOS 只允许在用户第一次触摸之后才播放音频。必须在首次触摸事件中初始化音频引擎，否则整局游戏都会没有声音。</div>
+  </div>
+</section>
+
+<!-- ============ 7. 脚本 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">07 · 用 Unity 搭建</p>
+    <h2>脚本职责划分</h2>
+    <p>每个脚本只负责一件事，只和相邻的脚本通信。这样划分之后，出错时你能立刻知道该打开哪个文件。</p>
+  </div>
+
+  <div class="strip scroll">
+    <table style="min-width:660px">
+      <thead><tr><th style="width:170px">脚本</th><th style="width:230px">持有的数据</th><th>负责的职责</th></tr></thead>
+      <tbody>
+        <tr><td class="mono"><strong>GridManager</strong></td><td><code>Color?[8,8]</code></td><td>网格状态的唯一真相来源。检查能否放置、扫描满行/列、清除格子。<strong>不</strong>知道任何关于触摸、分数或特效的事情。</td></tr>
+        <tr><td class="mono"><strong>BlockPiece</strong></td><td>坐标列表 + 颜色</td><td>描述一个方块并绘制自身。是纯数据，不会自己移动。</td></tr>
+        <tr><td class="mono"><strong>DragAndDrop</strong></td><td>当前拿着的方块、手指偏移量</td><td>触摸、拖动、影子、预览格、吸附网格规则。向 GridManager 询问"能不能放"，自己不做判断。</td></tr>
+        <tr><td class="mono"><strong>TrayManager</strong></td><td>3 个方块槽位</td><td>按等级权重抽取方块，三个用完后重新填充托盘。</td></tr>
+        <tr><td class="mono"><strong>ScoreManager</strong></td><td>分数、连击、最高分</td><td>应用得分公式，维护并重置连击，保存最高分。</td></tr>
+        <tr><td class="mono"><strong>LevelManager</strong></td><td>等级</td><td>将分数换算为等级，为 TrayManager 提供方块抽取权重表。</td></tr>
+        <tr><td class="mono"><strong>EffectsManager</strong></td><td>—</td><td>接收"在这个格子、这个颜色播放爆炸"的指令：运行粒子系统与 AudioSource。不知道任何游戏规则。</td></tr>
+        <tr><td class="mono"><strong>GameManager</strong></td><td>对局状态</td><td>调度一轮内的执行顺序，在特效播放期间锁定操作，检查失败，开启结束画面。</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 8. 清单 ============ -->
+<section>
+  <div class="col head">
+    <p class="eyebrow">08 · 开发顺序</p>
+    <h2>请按此顺序进行</h2>
+    <p>每一步都要产出可运行、可点击试玩的东西。不要在规则跑通之前就先做特效——这是最常见的陷阱。</p>
+  </div>
+
+  <div class="col">
+    <ol class="chk">
+      <li class="done"><span class="box"></span><span>可在浏览器运行的 HTML 演示版，用来感受核心机制</span><span class="tag">已完成</span></li>
+      <li><span class="box"></span><span>安装 Unity Hub + Unity LTS + Android Build Support 模块</span><span class="tag">半天</span></li>
+      <li><span class="box"></span><span>用方形 Prefab 绘制 8×8 网格，先不用能玩</span><span class="tag">R1</span></li>
+      <li><span class="box"></span><span>声明方块集，在托盘中显示 3 个方块</span><span class="tag">R4</span></li>
+      <li><span class="box"></span><span>拖拽放置 + 预览格 + 吸附网格规则</span><span class="tag">R5</span></li>
+      <li><span class="box"></span><span>扫描满行/列并消除——先不用做特效</span><span class="tag">R6 · R7</span></li>
+      <li><span class="box"></span><span>分数、连击、等级、失败判定</span><span class="tag">R8 – R10</span></li>
+      <li><span class="box"></span><span>烟花粒子系统 + 三种音效</span><span class="tag">第 06 节</span></li>
+      <li><span class="box"></span><span>打包到真实 Android 设备，调整格子尺寸以适配手感</span><span class="tag">半天</span></li>
+      <li><span class="box"></span><span>菜单、图标、背景音乐、导出 .aab、发布到 Google Play</span><span class="tag">一次性 $25</span></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <p>方块拼图游戏设计文档 · 配套可运行演示见 <code>block-puzzle.html</code>（或中文版 <code>block-puzzle-zh.html</code>）——本文档中的每一个数值都直接取自该演示版本。</p>
+</footer>
+
+</div>
+
+<script>
+// 用游戏中实际使用的坐标数据绘制方块集示意图
+const SHAPES = [
+  [1,"1格",       [[0,0]]],
+  [1,"横2",       [[0,0],[0,1]]],
+  [1,"竖2",       [[0,0],[1,0]]],
+  [1,"横3",       [[0,0],[0,1],[0,2]]],
+  [1,"竖3",       [[0,0],[1,0],[2,0]]],
+  [1,"2×2方块",   [[0,0],[0,1],[1,0],[1,1]]],
+  [2,"L ↰",       [[0,0],[1,0],[1,1]]],
+  [2,"L ↱",       [[0,0],[0,1],[1,0]]],
+  [2,"L ↲",       [[0,0],[0,1],[1,1]]],
+  [2,"L ↳",       [[0,1],[1,0],[1,1]]],
+  [2,"横4",       [[0,0],[0,1],[0,2],[0,3]]],
+  [2,"竖4",       [[0,0],[1,0],[2,0],[3,0]]],
+  [3,"长L形",     [[0,0],[1,0],[2,0],[2,1]]],
+  [3,"长J形",     [[0,1],[1,1],[2,1],[2,0]]],
+  [3,"横L形",     [[0,0],[0,1],[0,2],[1,0]]],
+  [3,"横J形",     [[0,0],[0,1],[0,2],[1,2]]],
+  [3,"S形",       [[0,0],[0,1],[1,1],[1,2]]],
+  [3,"Z形",       [[0,1],[0,2],[1,0],[1,1]]],
+  [4,"T形",       [[0,0],[0,1],[0,2],[1,1]]],
+  [4,"倒T形",     [[1,0],[1,1],[1,2],[0,1]]],
+  [4,"横5",       [[0,0],[0,1],[0,2],[0,3],[0,4]]],
+  [4,"竖5",       [[0,0],[1,0],[2,0],[3,0],[4,0]]],
+  [5,"十字形",    [[0,1],[1,0],[1,1],[1,2],[2,1]]],
+  [5,"2×3",       [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]]],
+  [5,"3×2",       [[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]]],
+  [6,"3×3方块",   [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]]]
+];
+const PALETTE = ["#FF6B6B","#FFA94D","#FFD43B","#69DB7C","#4DD4E8","#5C9DFF","#B197FC","#F783AC"];
+const U = 13, G = 2.5, BOX = 5 * U + 4 * G;   // 统一比例的公共尺寸
+
+SHAPES.forEach(([lv, name, cells], i) => {
+  const target = document.getElementById(lv <= 3 ? "s" + lv : "s4");
+  if (!target) return;
+  const rows = Math.max(...cells.map(c => c[0])) + 1;
+  const cols = Math.max(...cells.map(c => c[1])) + 1;
+  const w = cols * U + (cols - 1) * G, h = rows * U + (rows - 1) * G;
+  const ox = (BOX - w) / 2, oy = (BOX - h) / 2;
+  const color = PALETTE[i % PALETTE.length];
+  const blocks = cells.map(([r, c]) =>
+    `<rect x="${(ox + c * (U + G)).toFixed(1)}" y="${(oy + r * (U + G)).toFixed(1)}" width="${U}" height="${U}" rx="2.6" fill="${color}"/>`
+  ).join("");
+  const el = document.createElement("div");
+  el.className = "shape";
+  el.innerHTML =
+    `<svg viewBox="0 0 ${BOX} ${BOX}" width="${BOX}" height="${BOX}" role="img" aria-label="方块 ${name}">${blocks}</svg>` +
+    `<span class="nm">${name}</span>`;
+  target.appendChild(el);
+});
+</script>
+</body>
+</html>
