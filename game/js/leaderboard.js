@@ -16,6 +16,11 @@ import { isConfigured } from "./config.js";
 
 const el = id => document.getElementById(id);
 
+/* Phải khớp với supabase/functions/profile/index.ts. Lệch nhau là người chơi
+   gõ đúng theo màn hình nhưng máy chủ vẫn từ chối. */
+const NICK_MIN = 2;
+const NICK_MAX = 16;
+
 let myNickname = null;
 let onIdentityChange = () => {};
 
@@ -37,6 +42,7 @@ export function initLeaderboard(opts = {}) {
   el("nickSave").addEventListener("click", saveNickname);
   el("nickCancel").addEventListener("click", () => el("nick").classList.remove("show"));
   el("nickInput").addEventListener("keydown", e => { if (e.key === "Enter") saveNickname(); });
+  el("nickInput").addEventListener("input", paintNickRules);
 
   paintAccount();
 }
@@ -46,13 +52,19 @@ export function nickname() { return myNickname; }
 /** Gọi sau khi đăng nhập xong: lấy biệt danh, chưa có thì hỏi ngay. */
 export async function loadIdentity() {
   if (!auth.signedIn) { myNickname = null; paintAccount(); return; }
+
+  /* Phân biệt "hỏi xong, biết chắc là chưa có biệt danh" với "không hỏi được".
+     Thiếu chỗ phân biệt này thì người đã đăng nhập mà đang mất mạng sẽ bị hộp
+     đặt biệt danh nhảy ra đè lên ván chơi, mà bấm Lưu cũng không lưu được. */
+  let answered = false;
   try {
     myNickname = await net.myNickname(auth.userId);
+    answered = true;
   } catch (e) {
     myNickname = null;
   }
   paintAccount();
-  if (!myNickname) openNickname(true);
+  if (answered && !myNickname) openNickname(true);
 }
 
 /* ---------- Bảng xếp hạng ---------- */
@@ -140,22 +152,88 @@ function paintAccount() {
 function openNickname(firstTime) {
   el("nickTitle").textContent = firstTime ? "Chọn biệt danh" : "Đổi biệt danh";
   el("nickInput").value = myNickname || "";
-  el("nickStatus").textContent = "";
+  setStatusLine("", "");
+  paintNickRules();
   el("nick").classList.add("show");
   el("nickInput").focus();
 }
 
+/* Đếm ký tự và bật/tắt nút Lưu ngay trong lúc gõ.
+   Trước đây ô trống vẫn bấm Lưu được, gửi lên máy chủ rồi mới bị từ chối — mà
+   thông báo trả về lại nằm ở chỗ dễ bỏ sót. Giờ luật hiện ngay dưới ô, và nút
+   Lưu chỉ sáng khi tên đã hợp lệ, nên không còn kiểu "bấm mà không có gì xảy ra". */
+function paintNickRules() {
+  const value = clean(el("nickInput").value);
+  const len   = [...value].length;
+  const count = el("nickCount");
+
+  count.textContent = len + " / " + NICK_MAX;
+  count.className = len === 0 ? "" : (len >= NICK_MIN && len <= NICK_MAX ? "ok" : "bad");
+
+  el("nickSave").disabled = !(len >= NICK_MIN && len <= NICK_MAX);
+}
+
+/* Dọn giống hệt phía máy chủ để cái người chơi thấy chính là cái được lưu.
+   Hai bên lệch nhau là sinh ra loại lỗi khó chịu nhất: đếm đủ 6 ký tự trên màn
+   hình nhưng máy chủ lại bảo quá ngắn. */
+function clean(s) {
+  let out = "";
+  for (const ch of s) {
+    const cp = ch.codePointAt(0);
+    const invisible =
+      cp < 0x20 || cp === 0x7f ||
+      (cp >= 0x200b && cp <= 0x200f) ||
+      (cp >= 0x202a && cp <= 0x202e) ||
+      (cp >= 0x2066 && cp <= 0x2069) ||
+      cp === 0xfeff;
+    if (!invisible) out += ch;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function setStatusLine(text, kind) {
+  const p = el("nickStatus");
+  p.textContent = text;
+  p.className = kind ? "muted " + kind : "muted";
+}
+
 async function saveNickname() {
-  const value = el("nickInput").value.trim();
-  el("nickStatus").textContent = "Đang lưu…";
+  const value = clean(el("nickInput").value);
+  const len   = [...value].length;
+
+  // Chặn tại chỗ, không bắt người chơi chờ một vòng mạng để nghe "quá ngắn".
+  if (len < NICK_MIN) return setStatusLine("Cần ít nhất " + NICK_MIN + " ký tự.", "err");
+  if (len > NICK_MAX) return setStatusLine("Dài quá, tối đa " + NICK_MAX + " ký tự.", "err");
+  if (!auth.signedIn)  return setStatusLine("Bạn chưa đăng nhập. Đóng cửa sổ này rồi bấm Đăng nhập bằng Google.", "err");
+
+  el("nickSave").disabled = true;
+  setStatusLine("Đang lưu…", "");
+
   try {
     const res = await net.setNickname(value);
     myNickname = res.nickname;
-    el("nick").classList.remove("show");
+    setStatusLine("Đã lưu: " + res.nickname, "ok");
     paintAccount();
     onIdentityChange();
+    setTimeout(() => el("nick").classList.remove("show"), 700);
   } catch (e) {
-    el("nickStatus").textContent = e.message;
+    setStatusLine(nickError(e), "err");
+    el("nickSave").disabled = false;
+  }
+}
+
+/* Mã lỗi của máy chủ dịch sang câu người đọc hiểu VÀ biết phải làm gì tiếp.
+   "Máy chủ trả về lỗi 409" thì không ai biết phải xử lý ra sao. */
+function nickError(e) {
+  switch (e.code) {
+    case "nickname_taken": return "Tên này có người dùng rồi. Thử thêm số hoặc đổi cách viết.";
+    case "bad_nickname":   return "Tên phải dài " + NICK_MIN + "–" + NICK_MAX + " ký tự.";
+    case "rate_limited":   return "Hôm nay đổi tên nhiều lần quá. Thử lại vào ngày mai.";
+    case "unauthorized":   return "Phiên đăng nhập đã hết hạn. Đăng nhập lại giúp tôi.";
+    case "offline":
+    case "timeout":        return "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+    case "not_configured": return "Bảng xếp hạng chưa được bật cho bản này.";
+    default:               return e.message || "Không lưu được, thử lại sau.";
   }
 }
 

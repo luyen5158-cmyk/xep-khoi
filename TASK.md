@@ -23,12 +23,12 @@
 
 | 順序 | 做什麼 | 大概要多久 |
 |---|---|---|
-| 1 | **拿手機實測拖放手感**（不用帳號，見 E 段） | 5 分鐘 |
-| 2 | 註冊 Supabase + 跑 `schema.sql`（README 步驟 1–2） | 15 分鐘 |
-| 3 | Google 登入 + 三個白名單（README 步驟 3–4） | 留 1 小時，**這裡最容易卡** |
-| 4 | 部署三個 Edge Function（README 步驟 5） | 20 分鐘 |
-| 5 | 填 `game/js/config.js` 兩個值（README 步驟 6） | 2 分鐘 · **排行榜在這一刻活過來** |
-| 6 | GitHub Secrets + 防休眠排程（README 步驟 7） | 10 分鐘 |
+| ~~1~~ | ~~拿手機實測拖放手感~~ **✅ 2026-09-03 實機測過，手感沒問題** | — |
+| ~~2~~ | ~~註冊 Supabase + 跑 SQL~~ **✅ 2026-09-03 專案 `blast!!`（Singapore）建好，migration 已套用，RLS 從外部驗證通過** | — |
+| ~~3~~ | ~~Google 登入 + 白名單~~ **✅ 用 `supabase config push` 一次做完，實際登入通過** | — |
+| ~~4~~ | ~~部署三個 Edge Function~~ **✅ 三個都上線，CORS 預檢與權限實測通過** | — |
+| ~~5~~ | ~~填 `config.js`~~ **✅ 排行榜活了：第一筆成績 `meme` 2714 分** | — |
+| **6** | **GitHub Secrets + 防休眠排程（README 步驟 7）← 下一步** | 10 分鐘 |
 | 7 | 寫隱私權政策（10 項清單在 [INFRA.md](INFRA.md)） | 給陌生人玩之前必須有 |
 
 **步驟 2 值得單獨切開來做。** SQL 跑完、五張表的 RLS 都亮著，你就知道整條路是通的，心裡有底再去處理 Google 登入那段麻煩事。
@@ -66,7 +66,9 @@
   玩家可以把暱稱設成一段程式碼。輸出方式錯了，那段程式碼會在**每一個看排行榜的人**的瀏覽器上執行，偷走所有人的登入憑證。因為決定不做名字過濾，這一層更不能有例外。
   *Không bao giờ dùng `innerHTML` cho biệt danh.*
 
-- [x] **每一張資料表都確認權限鎖已開啟**（SQL 寫好了，開專案後要用眼睛再確認一次）
+- [x] **每一張資料表都確認權限鎖已開啟**
+  2026-09-03 用 `curl` 從外部實測：寫入五張表全部被 `42501 row-level security` 擋下，
+  兩個秘密函式回 `permission denied`，排行榜與暱稱讀得到。比後台顯示 enabled 可靠。
   Supabase 最常見也最慘的意外。忘記開的話，公開的 anon key 就變成萬能鑰匙，任何人都能讀、能改、能**刪光整張表**。
   *Bật khoá quyền trên mọi bảng.*
 
@@ -89,7 +91,8 @@
 - [x] **登入後清掉網址列的 `?code=...`**
   用 `history.replaceState`。不清的話，玩家把網址複製給朋友時會連登入憑證一起送出去。
 
-- [ ] **三個地方的白名單要填對**（只有你能填，步驟見 [supabase/README.md](supabase/README.md)）
+- [x] **三個地方的白名單要填對**
+  Supabase 那兩條寫在 `supabase/config.toml` 的 `additional_redirect_urls`，用 `supabase config push` 送上去 —— 白名單躺在 git 裡，看 repo 就知道。Google 那條是 OAuth client 的 redirect URI。
   填錯的症狀是「登入後跳到錯誤頁面」，新手最常卡這裡。
   - Supabase → Redirect URLs → `https://luyen5158-cmyk.github.io/xep-khoi/game/`
   - Supabase → Redirect URLs → `http://localhost:8777/game/`（本機測試用）
@@ -105,12 +108,12 @@
 > *Toàn bộ việc phải làm cho bảng xếp hạng.*
 
 **Supabase 那一半**
-- [ ] 開一個 Supabase 專案（只開一個，不分測試和正式）← **只有你能做**
+- [x] 開一個 Supabase 專案（只開一個，不分測試和正式）—— `blast!!`，Singapore，Free
 - [x] 排行榜表：每人一筆最高分（暱稱、分數）→ **可公開讀**
 - [x] 對局記錄表：每人最高分那一局的下法 → **不公開，只有伺服器讀得到**
 - [x] 種子表：發給誰、用過沒、什麼時候過期
 - [x] 權限設定：所有人可讀排行榜，**沒有人可以直接寫任何表**
-- [ ] 打開 Google 登入 ← **只有你能做**
+- [x] 打開 Google 登入（`supabase config push`，secret 走 `.env` 不進 git）
 - [x] Edge Function：**發種子**（綁定使用者、單次、會過期）
 - [x] Edge Function：**驗證分數**（收 replay → 確認種子有效且未用過 → 重跑整局算分 → 才寫進資料庫）
 - [x] Edge Function：次數限制、資料大小限制
@@ -138,14 +141,13 @@
 
 > *Việc của chủ dự án.*
 
-- [ ] **拿手機實際玩幾局，確認拖放手感**
-  目前只用程式模擬觸控測過，幾何計算正確，但「順不順手」測不出來。
-  **排行榜做得再好，遊戲不好玩也沒有人會來。**
-  *Chơi thử trên điện thoại thật. Bảng xếp hạng làm đẹp mấy mà game không vui thì không ai vào.*
+- [x] **拿手機實際玩幾局，確認拖放手感**
+  2026-09-03 用實機玩過，回報「都 ok」。手感這關過了，可以放心往下做排行榜。
+  *Đã chơi thử trên điện thoại thật ngày 2026-09-03, cảm giác kéo thả ổn.*
 
 - [ ] **寫隱私權政策**（收 Google 登入資料就必須有，10 項清單在 [INFRA.md](INFRA.md)）
 
-- [ ] **註冊一個 Supabase 帳號** ← 全部卡在這一步
+- [x] **註冊一個 Supabase 帳號**（用 GitHub 登入）
 
 ---
 
@@ -155,6 +157,25 @@
 
 - [ ] **要不要買網域** —— 現在是 `luyen5158-cmyk.github.io/xep-khoi/game/`，陌生人記不住。一年約 NT$300–500。不急，隨時能換。
 - [ ] **要不要裝訪客統計** —— Cloudflare 的免費、不用 cookie，所以不需要同意彈窗。
+
+---
+
+## G2. 待處理的安全事項
+
+- [ ] **換掉 Google OAuth Client Secret**
+  2026-09-03 建立 OAuth client 時，那把 secret 出現在截圖裡，等於進了對話記錄。
+  風險低（私人對話，沒有公開），但正確做法是換一把：
+  Google Cloud Console → 用戶端 → `xep-khoi web` → 新增一把 secret → 更新 `.env` →
+  `supabase config push` → 確認登入還能用 → 刪掉舊的那把。
+  **教訓：ID 和金鑰一律從 DOM 取，不要用眼睛讀截圖。** 同一天 Client ID 也讀錯兩個
+  字元（`g` 看成 `q`、`m` 看成 `rn`），害登入回 `invalid_client`，查了一輪才發現。
+  *Đổi Client Secret. Bài học: lấy ID và khoá từ DOM, đừng đọc bằng mắt từ ảnh chụp.*
+
+- [ ] **把 OAuth 同意畫面從 Testing 改成 Production**
+  現在只有列在 Test users 的 email 登得進去（目前只有 `megan@wport.me`）。
+  **Google 要求先有隱私權政策網址才准 Publish** —— 所以第 7 項不是「之後再說」，
+  它直接卡住對外開放的日子。
+  *Google bắt buộc có link chính sách bảo mật mới cho Publish.*
 
 ---
 

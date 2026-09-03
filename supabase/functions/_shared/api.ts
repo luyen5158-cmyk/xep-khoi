@@ -59,9 +59,21 @@ export function fail(req: Request, code: string, message: string, status = 400):
  * xuất hiện trong thư mục game/.
  */
 export function serviceClient(): SupabaseClient {
+  /* Supabase có hai đời khoá bí mật: `service_role` (JWT đời cũ) và
+     `sb_secret_...` (đời mới). Dự án mở gần đây dùng đời mới. Thử lần lượt cả
+     ba tên biến để khỏi phụ thuộc vào việc dự án thuộc đời nào.
+     Nếu cả ba đều trống, đặt tay một lần bằng:
+       supabase secrets set SB_SECRET_KEY=sb_secret_... */
+  const key =
+    Deno.env.get("SB_SECRET_KEY") ??
+    Deno.env.get("SUPABASE_SECRET_KEY") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!key) throw new Error("thiếu khoá bí mật: đặt SB_SECRET_KEY cho project");
+
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    key,
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 }

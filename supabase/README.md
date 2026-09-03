@@ -16,7 +16,19 @@
 
 ## 2. 建資料表和權限鎖
 
-Supabase → **SQL Editor** → 把 [`schema.sql`](schema.sql) 整份貼進去 → Run。
+結構寫成 migration，放在 [`migrations/20260903000000_leaderboard.sql`](migrations/20260903000000_leaderboard.sql)。有版本編號，以後要改結構是**加一個新檔案**，不是改舊的那個。
+
+**做法 A —— 用 CLI（建議，之後部署 Edge Function 也是同一套工具）：**
+
+```bash
+supabase login
+supabase link --project-ref 你的專案代號
+supabase db push
+```
+
+`link` 會問資料庫密碼，就是開專案時按 Generate 那組。
+
+**做法 B —— 手貼：** Supabase → **SQL Editor** → 把那個 migration 檔整份貼進去 → Run。
 
 跑完去 **Table Editor** 確認五張表都在，而且每一張的 **RLS 都顯示已啟用**。
 這一步是整個專案最容易出人命的地方：忘記開，公開的 anon key 就變成萬能鑰匙。

@@ -58,11 +58,15 @@ async function rpc(name, args) {
 
 async function rest(path, options = {}) {
   if (!isConfigured()) throw err("not_configured", "Chưa cấu hình bảng xếp hạng");
+  /* Chỉ gửi `apikey`, KHÔNG gửi kèm Authorization.
+     Supabase có hai đời khoá công khai: `anon` (JWT đời cũ) và
+     `sb_publishable_...` (đời mới). Khoá cũ dùng được ở cả hai header, khoá mới
+     thì chỗ của nó là `apikey`. Gửi mỗi `apikey` là đúng với cả hai đời, và
+     PostgREST vẫn biết đây là vai "anon" để áp khoá quyền. */
   const res = await timed(SUPABASE_URL + path, {
     ...options,
     headers: {
       apikey: SUPABASE_ANON_KEY,
-      Authorization: "Bearer " + SUPABASE_ANON_KEY,
       ...(options.headers || {})
     }
   });

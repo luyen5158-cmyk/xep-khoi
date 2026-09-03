@@ -75,7 +75,14 @@
     <h2 id="nickTitle">Chọn biệt danh</h2>
     <p class="muted">Tên này hiện trên bảng xếp hạng. Email và tên thật của bạn không bao giờ hiện ra.</p>
     <input id="nickInput" type="text" maxlength="16" autocomplete="off"
-           autocapitalize="off" spellcheck="false" placeholder="2–16 ký tự">
+           autocapitalize="off" spellcheck="false" placeholder="Ví dụ: Mai, Hùng 88, Bé Bo">
+
+    <!-- Luật hiện ngay dưới ô nhập, không giấu trong thông báo lỗi. -->
+    <div class="nickrules">
+      <span id="nickCount">0 / 16</span>
+      <span>2–16 ký tự · dấu tiếng Việt được · mỗi tên chỉ một người dùng</span>
+    </div>
+
     <p id="nickStatus" class="muted"></p>
     <button id="nickSave"   type="button">Lưu</button>
     <button id="nickCancel" type="button" class="ghost">Để sau</button>

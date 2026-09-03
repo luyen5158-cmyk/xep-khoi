@@ -183,3 +183,19 @@ button.danger {
 #nickInput:focus { outline: none; border-color: rgba(126,224,255,.6); }
 
 #over #overRank { margin-top: -4px; }
+
+/* Luật đặt biệt danh — hiện thường trực dưới ô nhập, không đợi tới lúc lỗi.
+   Người chơi phải biết luật TRƯỚC khi gõ, chứ không phải sau khi bị từ chối. */
+.nickrules {
+  display: flex; gap: 10px; align-items: baseline;
+  font-size: 11px; color: #6f7ba0; margin-top: -6px;
+}
+#nickCount { font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+#nickCount.ok  { color: #69db7c; }
+#nickCount.bad { color: #ff8b8b; }
+
+#nickStatus.err { color: #ff8b8b; }
+#nickStatus.ok  { color: #69db7c; }
+
+button:disabled { opacity: .4; cursor: not-allowed; }
+button:disabled:active { transform: none; }
