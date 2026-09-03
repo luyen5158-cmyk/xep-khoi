@@ -1,0 +1,17 @@
+# Bảy file luật chơi tồn tại ở hai nơi: game/js (trình duyệt chạy) và
+# supabase/functions/_shared/engine (máy chủ chạy để xác minh điểm).
+#
+# Lệch nhau một dòng là máy chủ tính ra điểm khác trình duyệt, và MỌI ván xếp
+# hạng đều bị từ chối — mà thông báo lỗi sẽ chẳng chỉ về phía nguyên nhân.
+# Việc kiểm tra này rẻ, nên để nó chạy mỗi lần push.
+
+name: Bộ máy luật chơi phải khớp
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./tools/sync-engine.sh --check

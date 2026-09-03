@@ -20,6 +20,7 @@
     <div class="stat"><div class="label">Điểm</div><div class="value" id="score">0</div></div>
     <div class="stat"><div class="label">Level</div><div class="value" id="level">1</div></div>
     <div class="stat"><div class="label">Kỷ lục</div><div class="value" id="best">0</div></div>
+    <button id="rank" type="button" aria-label="Bảng xếp hạng">🏆</button>
     <button id="mute" type="button" aria-label="Tắt âm thanh">🔊</button>
   </div>
 
@@ -30,6 +31,9 @@
   </div>
 
   <div id="hint">Kéo khối vào lưới · lấp đầy hàng ngang hoặc cột dọc để xoá</div>
+  <!-- Nói rõ ván này có tính xếp hạng không. Người chơi không phải chọn gì cả:
+       có đăng nhập + có mạng là ván xếp hạng, ngược lại tự thành ván luyện tập. -->
+  <div id="mode"></div>
 </div>
 
 <div id="combo"></div>
@@ -38,7 +42,44 @@
 <div id="over">
   <h1>Hết nước đi!</h1>
   <p>Điểm của bạn: <b id="finalScore">0</b></p>
+  <p id="submitStatus" class="muted"></p>
   <button id="again" type="button">Chơi lại</button>
+  <button id="overRank" type="button" class="ghost">Bảng xếp hạng</button>
+</div>
+
+<!-- Bảng xếp hạng -->
+<div id="lb">
+  <div class="sheet">
+    <h2>Bảng xếp hạng</h2>
+    <p id="lbStatus" class="muted"></p>
+    <ol id="lbList"></ol>
+    <p id="lbSelf" class="self"></p>
+
+    <div class="account">
+      <button id="signIn" type="button" hidden>Đăng nhập bằng Google</button>
+      <div id="signedIn" hidden>
+        <p id="whoami" class="muted"></p>
+        <button id="editNick"  type="button" class="ghost">Đổi biệt danh</button>
+        <button id="signOut"   type="button" class="ghost">Đăng xuất</button>
+        <button id="deleteAcc" type="button" class="danger">Xoá tài khoản</button>
+      </div>
+    </div>
+
+    <button id="lbClose" type="button">Đóng</button>
+  </div>
+</div>
+
+<!-- Đặt biệt danh -->
+<div id="nick">
+  <div class="sheet">
+    <h2 id="nickTitle">Chọn biệt danh</h2>
+    <p class="muted">Tên này hiện trên bảng xếp hạng. Email và tên thật của bạn không bao giờ hiện ra.</p>
+    <input id="nickInput" type="text" maxlength="16" autocomplete="off"
+           autocapitalize="off" spellcheck="false" placeholder="2–16 ký tự">
+    <p id="nickStatus" class="muted"></p>
+    <button id="nickSave"   type="button">Lưu</button>
+    <button id="nickCancel" type="button" class="ghost">Để sau</button>
+  </div>
 </div>
 
 <script type="module" src="js/game.js"></script>

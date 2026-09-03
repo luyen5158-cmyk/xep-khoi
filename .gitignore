@@ -19,3 +19,14 @@ Icon?
 *.sln
 *.apk
 *.aab
+
+# Bí mật — KHÔNG BAO GIỜ đẩy lên GitHub.
+# Git nhớ mọi phiên bản: lỡ đẩy service_role key lên là lộ vĩnh viễn,
+# xoá rồi commit lại cũng vô ích, chỉ còn cách vào Supabase huỷ và cấp lại khoá.
+.env
+.env.*
+!.env.example
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/

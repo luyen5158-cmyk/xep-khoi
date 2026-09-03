@@ -1,0 +1,40 @@
+# Chống ngủ đông + dọn rác, hai việc trong một lần gọi.
+#
+# Vì sao cần: dự án Supabase miễn phí bị tạm dừng sau khoảng một tuần không ai
+# đụng tới. Lúc bị dừng, bảng xếp hạng hỏng (game vẫn chơi được). Giai đoạn
+# nguy hiểm nhất là ngay sau khi mở, khi chưa có người chơi nào.
+#
+# Lời gọi này vừa đánh thức cơ sở dữ liệu, vừa xoá hạt giống hết hạn và bản
+# đếm số lần đã cũ — không dọn thì hai bảng đó cứ phình mãi.
+#
+# Cần đặt hai Secret trong repo (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL               https://xxxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY  Project Settings → API → service_role
+# service_role key CHỈ được sống ở đây và trong Edge Function. Không bao giờ
+# nằm trong thư mục game/.
+
+name: Đánh thức Supabase
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *"     # 3 ngày một lần, 06:00 UTC
+  workflow_dispatch:           # bấm tay chạy ngay, để thử
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gọi cleanup_expired_seeds
+        env:
+          URL: ${{ secrets.SUPABASE_URL }}
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -e
+          code=$(curl -s -o /tmp/out.txt -w "%{http_code}" \
+            -X POST "$URL/rest/v1/rpc/cleanup_expired_seeds" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "HTTP $code — đã xoá $(cat /tmp/out.txt) hạt giống hết hạn"
+          test "$code" = "200"
